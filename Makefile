@@ -68,3 +68,4 @@ bin/tests.run : $(TESTOBJS) | $(LIBFILE)
 
 bin/tests.o : src/external-deps/catch.hpp
 bin/tests.o : src/potential-lj.hpp
+bin/tests.o : src/integrate.hpp
