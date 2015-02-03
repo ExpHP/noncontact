@@ -65,7 +65,7 @@ template<
   typename F, typename T, typename... Args, typename R,
   REQUIRE_MATH_FUNC(F, T, Args, R)
 >
-R converge(F func, T init, T factor, R tol, unsigned maxiter, Args... args)
+R converge(F func, T init, T factor, R tol, int maxiter, Args... args)
 {
 	if (maxiter < 0)
 		maxiter = std::numeric_limits<decltype(maxiter)>::max();
@@ -184,11 +184,11 @@ TEST_CASE("Convergence") {
 
 		SECTION("Should fail if given insufficient iterations to converge") {
 			// triple the number of regions each step, for 2 steps
-			REQUIRE_THROWS(converge(the_func, 1, 3, 1E-8, 2));
+			REQUIRE_THROWS(converge(the_func, 1u, 3u, 1E-8, 2));
 		}
 		SECTION("Should succeed if given sufficient iterations to converge") {
 			// triple the number of regions each step, for up to 100 steps
-			REQUIRE_NOTHROW(converge(the_func, 1, 3, 1E-8, 100));
+			REQUIRE_NOTHROW(converge(the_func, 1u, 3u, 1E-8, 100));
 		}
 	}
 
