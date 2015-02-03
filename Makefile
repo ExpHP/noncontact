@@ -3,7 +3,7 @@
 #=====================================
 # Set compiler flags
 
-CXXFLAGS = -Wall -std=c++0x -O3 -g -L/usr/lib -L./bin
+CXXFLAGS += -Wall -Wextra -pedantic -std=c++0x -O3 -g -L/usr/lib -L./bin
 
 #=====================================
 # Declare library files
@@ -50,15 +50,15 @@ clean :
 
 # Linking rule
 $(LIBFILE) : $(LIBOBJS)
-	g++ $(CXXFLAGS) -fPIC -shared -o $@ $^
+	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $^
 
 # Compilation rule (object)
 bin/%.o : src/%.cpp
-	g++ $(CXXFLAGS) -fPIC -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -fPIC -o $@ -c $<
 
 # Compilation rule (test)
 bin/tests.run : $(TESTOBJS) | $(LIBFILE)
-	g++ $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 #=====================================
 # Header dependencies (to force rebuilding when headers change...
