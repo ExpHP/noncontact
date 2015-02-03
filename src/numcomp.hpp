@@ -1,23 +1,25 @@
 #pragma once
 
 #include <functional>
+#include <cmath>
 
 #include "external-deps/catch.hpp"
 
-// A SFINAE construct that constrains F to be a function of (T, Args...) -> T,
-//  which is the form of function that most methods here are intended to work with.
-#define REQUIRE_MATH_FUNC(F,T,Args)                                                   \
+// A SFINAE construct that constrains F to be a function of (T, Args...) returning R.
+// Typically speaking, in this module, the methods vary the first parameter of the function
+//  (the one of type T), while simply forwarding the others (of types Args...).
+#define REQUIRE_MATH_FUNC(F,T,Args,R)                                                 \
 	typename = typename std::enable_if<                                               \
 		std::is_convertible<                                                          \
 			decltype(std::declval<F>()(std::declval<T>(), std::declval<Args>()...)),  \
-			T                                                                         \
+			R                                                                         \
 		>::value                                                                      \
 	>::type
 
 
 template<
   typename F, typename T, typename... Args,
-  REQUIRE_MATH_FUNC(F, T, Args)
+  REQUIRE_MATH_FUNC(F, T, Args, T)
 >
 T integrate_simpson(F func, T a, T b, unsigned regions, Args... args)
 {
@@ -42,7 +44,7 @@ T integrate_simpson(F func, T a, T b, unsigned regions, Args... args)
 
 template<
   typename F, typename T, typename... Args,
-  REQUIRE_MATH_FUNC(F, T, Args)
+  REQUIRE_MATH_FUNC(F, T, Args, T)
 >
 T differentiate_5point(F func, T x, T step, Args... args)
 {
@@ -54,6 +56,36 @@ T differentiate_5point(F func, T x, T step, Args... args)
 		sum += weights[i] * func(points[i], args...);
 
 	return sum / (12. * step);
+}
+
+
+// Calls its input function with terms from a geometric series (defined by `init` and `factor`)
+//  until it converges within a tolerance.
+template<
+  typename F, typename T, typename... Args, typename R,
+  REQUIRE_MATH_FUNC(F, T, Args, R)
+>
+R converge(F func, T init, T factor, R tol, unsigned maxiter, Args... args)
+{
+	if (maxiter < 0)
+		maxiter = std::numeric_limits<decltype(maxiter)>::max();
+
+	T x = init;
+	R prev = func(x, args...);
+
+	x *= factor;
+	R next = func(x, args...);
+
+	while (fabs(prev - next) > tol) { // TODO: A abs_diff method with template specializations may be better
+		if (maxiter-- == 0)
+			throw std::runtime_error("Failed to converge"); // TODO include variables in message
+
+		x *= factor;
+		prev = next;
+		next = func(x, args...);
+	}
+
+	return next;
 }
 
 
@@ -123,6 +155,40 @@ TEST_CASE("5-point stencil") {
 				Approx(differentiate_5point(x_5, 2., 10.)) // large step
 				 != differentiate_5point(x_5, 2., 0.0001)  // small step
 			);
+		}
+	}
+
+}
+
+
+TEST_CASE("Convergence") {
+
+	SECTION("A simple case") {
+		// limit of 1 as x goes to zero
+		auto unsafe = [] (double x) { return x/x; };
+		REQUIRE(std::isnan(unsafe(0.)));   // double-check that unsafe is poorly defined at x=0.
+		CHECK_NOTHROW(converge(unsafe, 2., 0.5, 1E-10, -1) == Approx(1.)); // limit at x=0
+	}
+
+	SECTION("To infinity") {
+		// limit of 1/x as x -> infinity
+		auto reciprocal = [] (double x) { return 1./x; };
+		CHECK(converge(reciprocal, 1., 2., 1E-10, -1) == Approx(0.));
+	}
+
+	SECTION("Using for adaptive integration") {
+
+		// Function to integrate, which Simpson method cannot do exactly
+		auto x_4 = [] (double x) { return pow(x, 5.); };
+		auto the_func = [&x_4] (unsigned n) { return integrate_simpson(x_4, 0., 10., n); };
+
+		SECTION("Should fail if given insufficient iterations to converge") {
+			// triple the number of regions each step, for 2 steps
+			REQUIRE_THROWS(converge(the_func, 1, 3, 1E-8, 2));
+		}
+		SECTION("Should succeed if given sufficient iterations to converge") {
+			// triple the number of regions each step, for up to 100 steps
+			REQUIRE_NOTHROW(converge(the_func, 1, 3, 1E-8, 100));
 		}
 	}
 
