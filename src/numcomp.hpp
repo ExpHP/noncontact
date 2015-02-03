@@ -121,7 +121,7 @@ TEST_CASE("5-point stencil") {
 		SECTION("5-point stencil is not exact for fifth order") {
 			REQUIRE(
 				Approx(differentiate_5point(x_5, 2., 10.)) // large step
-				 == differentiate_5point(x_5, 2., 0.0001)  // small step
+				 != differentiate_5point(x_5, 2., 0.0001)  // small step
 			);
 		}
 	}

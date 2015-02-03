@@ -3,4 +3,4 @@
 
 // Import any header-plus-implementation files to make their test cases available.
 #include "potential-lj.hpp"
-#include "integrate.hpp"
+#include "numcomp.hpp"
