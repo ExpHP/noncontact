@@ -3,4 +3,5 @@
 
 // Import any header-plus-implementation files to make their test cases available.
 #include "potential-lj.hpp"
+#include "freq_caciuc.hpp"
 #include "numcomp.hpp"

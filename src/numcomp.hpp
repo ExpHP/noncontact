@@ -38,6 +38,7 @@ T integrate_simpson(F func, T a, T b, unsigned regions, Args... args)
 	for (unsigned i=1; i<regions; i++)
 		sum += 2 * func(a + (2*i+0)*h, args...);
 
+	//std::cout << "integrate_simpson(f, a=" << a << ", b=" << b << ", regions=" << regions << ") = " << sum*h/3. << std::endl;
 	return sum * h / 3.;
 }
 
@@ -52,9 +53,12 @@ T differentiate_5point(F func, T x, T step, Args... args)
 	T points[4]  = {x-2.*step, x-step, x+step, x+2*step};
 
 	T sum = 0.;
-	for (size_t i=0; i<4; i++)
+	for (size_t i=0; i<4; i++) {
+		//std::cout << "  w:" << weights[i] << "  x:" << points[i] << "  f:" << func(points[i], args...) << std::endl;
 		sum += weights[i] * func(points[i], args...);
+	}
 
+	//std::cout << "differentiate_5point(f, x=" << x << ", step=" << step << ") = " << sum/(12.*step) << std::endl;
 	return sum / (12. * step);
 }
 
@@ -67,24 +71,31 @@ template<
 >
 R converge(F func, T init, T factor, R tol, int maxiter, Args... args)
 {
+	//std::cout << "converge(f, init=" << init << ", factor=" << factor << ", tol=" << tol << ")" << std::endl;
 	if (maxiter < 0)
 		maxiter = std::numeric_limits<decltype(maxiter)>::max();
 
 	T x = init;
 	R prev = func(x, args...);
+	//std::cout << "converge: f(" << x << ") = " << prev << std::endl;
 
 	x *= factor;
 	R next = func(x, args...);
+	//std::cout << "converge: f(" << x << ") = " << next << std::endl;
 
+	//std::cout << prev << "\t" << next << std::endl;
 	while (fabs(prev - next) > tol) { // TODO: A abs_diff method with template specializations may be better
+		//std::cout << prev << "\t" << next << std::endl;
 		if (maxiter-- == 0)
 			throw std::runtime_error("Failed to converge"); // TODO include variables in message
 
 		x *= factor;
 		prev = next;
 		next = func(x, args...);
+		//std::cout << "converge: f(" << x << ") = " << next << std::endl;
 	}
 
+	//std::cout << "converge(f, init=" << init << ", factor=" << factor << ", tol=" << tol << ") = " << next << std::endl;
 	return next;
 }
 

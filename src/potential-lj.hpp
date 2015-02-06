@@ -45,6 +45,9 @@ class LJPotential {
 
 				result += particle.energy_unit * (unitless_r6 - 2.0) * unitless_r6;
 			}
+
+			//std::cout << "value_at(" << x << ", " << y << ", " << z << ") = " << result << std::endl;
+			assert( !std::isnan(result) );
 			return result;
 		}
 
