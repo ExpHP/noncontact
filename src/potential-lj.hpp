@@ -26,7 +26,7 @@ class LJPotential {
 			particles.emplace_back(x, y, z, energy_unit, length_unit);
 		}
 
-		size_t size() const { return this->particles.size(); }
+		std::size_t size() const { return this->particles.size(); }
 
 		T value_at(T x, T y, T z) const
 		{
