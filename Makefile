@@ -63,16 +63,19 @@ clean :
 
 # Linking rule
 $(LIBFILE) : $(LIBOBJS)
+	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $^
 
 # Compilation rule (object)
 bin/%.o : src/%.cpp
+	@mkdir -p $(@D)
 	@$(MAKEDEPEND)
 	@scripts/postprocess-depend.sh "bin/$*.d"
 	$(CXX) $(CXXFLAGS) -fPIC -o $@ -c $<
 
 # Compilation rule (test)
 bin/tests.run : $(TESTOBJS) | $(LIBFILE)
+	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 #=====================================
