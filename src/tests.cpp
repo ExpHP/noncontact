@@ -4,3 +4,5 @@
 // Import any header-plus-implementation files to make their test cases available.
 #include "potential-lj.hpp"
 #include "numcomp.hpp"
+#include "pseudopotential-lj.hpp"
+#include "lattice.hpp"
