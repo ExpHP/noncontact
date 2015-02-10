@@ -25,10 +25,7 @@ LIBOBJS = \
 
 TESTOBJS = \
 	bin/tests.o \
-	bin/tests/test-lattice.o \
-	bin/tests/test-numcomp.o \
-	bin/tests/test-potential-lj.o \
-	bin/tests/test-pseudopotential-lj.o \
+	$(shell scripts/list-test-cases.sh)
 
 OBJECTS = \
 	$(LIBOBJS) \
