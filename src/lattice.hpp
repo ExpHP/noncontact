@@ -1,7 +1,5 @@
 #pragma once
 
-#include "external-deps/catch.hpp"
-
 // BEWARE:  `ERE THE MIGHTY COPY-PASTA SLEEPS
 
 // TODO: Having duplicated code like this makes it easy to introduce bugs.
@@ -233,7 +231,3 @@ class Lattice3 {
 
 };
 
-
-TEST_CASE("lattices") {
-	CHECK(false); // TODO
-}
