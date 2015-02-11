@@ -15,7 +15,7 @@ class LJPseudoPotential {
 	public:
 		static LJPseudoPotential fit_to_data(Lattice3<T> potential)
 		{
-			LJPseudoPotential result{};
+			LJPseudoPotential result {};
 
 			// make coeff lattices in same shape and size as the potential
 
@@ -32,17 +32,15 @@ class LJPseudoPotential {
 
 
 			// Collect z-coordinates of data set
-			Array<T, Dynamic, 1> zarr(potential.size_3(), 1);
+			Array<T, Dynamic, 1> zarr {potential.size_3(), 1};
 			for (std::size_t k=0; k < potential.size_3(); k++) {
 				zarr(k) = potential.coord_at_3(k);
 			}
 
 			// Generate coefficient matrix
 			Matrix<T, Dynamic, 2> xmat {potential.size_3(), 2};
-			zarr = zarr * zarr * zarr; // compute z^3
-			zarr = zarr * zarr;        // compute z^6
-			xmat.col(0) = zarr;        // fill col 0 with z^6
-			xmat.col(1) = zarr * zarr; // fill col 1 with z^12
+			xmat.col(0) = zarr.pow(-6);
+			xmat.col(1) = zarr.pow(-12);
 
 			// Generate least squares system solver
 			auto solver = xmat.colPivHouseholderQr();
@@ -80,7 +78,7 @@ class LJPseudoPotential {
 			T c6  = coeff6(i,j);
 			T c12 = coeff12(i,j);
 
-			return c6 * pow(r,6) + c12 * pow(r,12);
+			return c6 * pow(r,-6) + c12 * pow(r,-12);
 		}
 
 		T force_z_derivative_at(T x, T y, T z) {

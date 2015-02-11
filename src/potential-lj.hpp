@@ -37,11 +37,11 @@ class LJPotential {
 				T delta_z = z - particle.z;
 
 				T delta_r2 = delta_x*delta_x + delta_y*delta_y + delta_z*delta_z;
-				T unitless_r2 = delta_r2 / (particle.length_unit * particle.length_unit);
+				T r_minus2 = (particle.length_unit * particle.length_unit) / delta_r2;
 
-				T unitless_r6  = unitless_r2 * unitless_r2 * unitless_r2;
+				T r_minus6  = r_minus2 * r_minus2 * r_minus2;
 
-				result += particle.energy_unit * (unitless_r6 - 2.0) * unitless_r6;
+				result += particle.energy_unit * (r_minus6 - 2.0) * r_minus6;
 			}
 			return result;
 		}
