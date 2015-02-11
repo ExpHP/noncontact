@@ -27,6 +27,9 @@ TESTOBJS = \
 	bin/tests.o \
 	$(shell scripts/list-test-cases.sh)
 
+EXAMPLE_EXES = \
+	bin/exes/first/first \
+
 OBJECTS = \
 	$(LIBOBJS) \
 	$(TESTOBJS) \
@@ -40,7 +43,8 @@ MAKEDEPEND = $(CXX) $(CXXFLAGS) -MM -MT $@ -o bin/$*.d $<
 #=====================================
 # Files removed by `make clean`
 
-EXES = bin/tests.run
+EXES = bin/tests.run \
+	$(EXAMPLE_EXES) \
 
 REBUILDABLES = $(OBJECTS) $(EXES) $(LIBFILE)
 
@@ -53,6 +57,9 @@ all : $(LIBFILE)
 # make check : Compile and run tests
 check : bin/tests.run
 	$^
+
+# make exes : Make example executables
+exes : $(EXAMPLE_EXES)
 
 # make clean : Remove any compiled files
 clean :
@@ -75,6 +82,13 @@ bin/%.o : src/%.cpp
 
 # Compilation rule (test)
 bin/tests.run : $(TESTOBJS) | $(LIBFILE)
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+#=====================================
+# Rules for building the executables
+
+bin/exes/first/first: bin/exes/first/main.o
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
