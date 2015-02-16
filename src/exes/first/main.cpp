@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "../../potential-lj.hpp"
+#include "../../bspline.hpp"
 
 using namespace std;
 
@@ -45,9 +46,27 @@ int main(int argc, char * argv[])
 //			cout << (imgz-pz)*(imgz-pz) << "\t";
 //			cout << pow((px-x)*(px-x) + (py-y)*(py-y) + (imgz-pz)*(imgz-pz),0.5) << endl;
 
-			cout << lj.value_at(x,y,imgz) << "\t";
+//			cout << lj.value_at(x,y,imgz) << "\t";
 		}
-		cout << endl;
+//		cout << endl;
 	}
+
+	vector<double> vec;
+	vec.push_back(0.00);
+	vec.push_back(0.25);
+	vec.push_back(0.50);
+	vec.push_back(0.75);
+	vec.push_back(1.00);
+	BSpline<double, double> spline(vec.begin(), vec.end(), 1);
+
+	for (int i=0; i<spline.num_points(); ++i)
+		spline.point(i) = 1.;
+
+	int N=200;
+	for (int i=0;i<N;++i) {
+		double x = (1.*i)/(N-1);
+		cout << x << '\t' << spline.interpolate(x) << endl;
+	}
+
 	return 0;
 }
