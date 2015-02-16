@@ -3,7 +3,8 @@
 #=====================================
 # Set compiler flags
 
-CXXFLAGS += -Wall -Wextra -pedantic -std=c++0x -O3 -g -L/usr/lib -L./bin
+#CXXFLAGS += -Wall -Wextra -pedantic -std=c++0x -O3 -g -L/usr/lib -L./bin
+CXXFLAGS += -Wall -Wextra -pedantic -std=c++0x -g -L/usr/lib -L./bin
 
 #=====================================
 # Dependencies
