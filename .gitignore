@@ -1,4 +1,10 @@
 #------------------------------------
+# Stuff specific to this project:
+
+# Things created by Makefile:
+bin/
+
+#------------------------------------
 # Temporary files
 
 # Vim
