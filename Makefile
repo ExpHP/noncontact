@@ -30,6 +30,9 @@ TESTOBJS = \
 
 EXAMPLE_EXES = \
 	bin/exes/first/first \
+	bin/exes/02-ljfit/potential \
+	bin/exes/02-ljfit/linear \
+	bin/exes/02-ljfit/nonlinear \
 
 OBJECTS = \
 	$(LIBOBJS) \
@@ -92,6 +95,18 @@ bin/tests.run : $(TESTOBJS) | $(LIBFILE)
 bin/exes/first/first: bin/exes/first/main.o
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $@ $^
+
+bin/exes/02-ljfit/potential: src/exes/02-ljfit/main.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -o $@ -DPLOT_POT -DPP_LINEAR $^
+
+bin/exes/02-ljfit/linear: src/exes/02-ljfit/main.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -o $@ -DPLOT_FIT -DPP_LINEAR $^
+
+bin/exes/02-ljfit/nonlinear: src/exes/02-ljfit/main.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -o $@ -DPLOT_FIT $^
 
 #=====================================
 # Include auto-generated dependency files

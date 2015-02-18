@@ -15,10 +15,9 @@ template <class T>
 class LJPseudoPotential {
 	public:
 
-		/*
+		#ifdef PP_LINEAR
 		// Original version, which is far simpler (a linear regression).
 		// It's here so I can compare output, and should be removed in the future.
-
 		static LJPseudoPotential fit_to_data(Lattice3<T> potential)
 		{
 			LJPseudoPotential result {};
@@ -75,7 +74,8 @@ class LJPseudoPotential {
 
 			return result;
 		}
-		*/
+
+		#else // #ifdef PP_LINEAR
 
 		static LJPseudoPotential fit_to_data(Lattice3<T> potential, T tolerance=1E-9)
 		{
@@ -169,6 +169,8 @@ class LJPseudoPotential {
 
 			return result;
 		}
+		#endif
+
 
 		T value_at(T x, T y, T z) {
 			// do nearest neighbor for x and y <---- HORRIBLE IDEA  FIXME FIXME FIXME
