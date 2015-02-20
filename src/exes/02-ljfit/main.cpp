@@ -49,12 +49,12 @@ int main(int argc, char * argv[])
 		.set_upper_coords(1., 1., arg_ub)
 	;
 
-	for (std::size_t i=0; i < data.size_1(); i++) {
-		for (std::size_t j=0; j < data.size_2(); j++) {
-			for (std::size_t k=0; k < data.size_3(); k++) {	
-				double x = data.coord_at_1(i);
-				double y = data.coord_at_2(j);
-				double z = data.coord_at_3(k);
+	for (std::size_t i=0; i < data.axis_size(1); i++) {
+		for (std::size_t j=0; j < data.axis_size(2); j++) {
+			for (std::size_t k=0; k < data.axis_size(3); k++) {
+				double x = data.coord(1,i);
+				double y = data.coord(2,j);
+				double z = data.coord(3,k);
 				data(i, j, k) = lj.value_at(x, y, z);
 			}
 		}

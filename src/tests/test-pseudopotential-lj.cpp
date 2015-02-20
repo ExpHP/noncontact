@@ -15,16 +15,16 @@ void test_fit_to_lj (R & rng, std::array<size_t,3> dims, std::array<double,3> po
 	lj.add_particle(pos[0], pos[1], pos[2], emin_true, rmin_true);
 	
 	// populate potential data
-	auto data = Lattice3<double> {dims[0], dims[1], dims[2]} // 11x11 so x,y coords are 0, 0.1, 0.2, ..., 1
+	auto data = Lattice3<double>(dims) // 11x11 so x,y coords are 0, 0.1, 0.2, ..., 1
 		.set_lower_coords(0., 0., 0.5)
 		.set_upper_coords(1., 1., 0.9)
 	;
-	for (std::size_t i=0; i < data.size_1(); i++) {
-		for (std::size_t j=0; j < data.size_2(); j++) {
-			for (std::size_t k=0; k < data.size_3(); k++) {	
-				double x = data.coord_at_1(i);
-				double y = data.coord_at_2(j);
-				double z = data.coord_at_3(k);
+	for (std::size_t i=0; i < data.axis_size(1); i++) {
+		for (std::size_t j=0; j < data.axis_size(2); j++) {
+			for (std::size_t k=0; k < data.axis_size(3); k++) {
+				double x = data.coord(1,i);
+				double y = data.coord(2,j);
+				double z = data.coord(3,k);
 				data(i, j, k) = lj.value_at(x, y, z);
 			}
 		}
