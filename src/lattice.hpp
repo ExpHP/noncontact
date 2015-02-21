@@ -35,32 +35,32 @@ class Lattice {
 		// std::array constructor
 		Lattice (std::array<size_type, Dim> dims)
 		: _dims(dims)
-		, _data(compute_full_size(_dims))
 		, _strides(compute_strides(_dims))
 		, _lbs(default_lower_bounds())
 		, _ubs(default_upper_bounds())
+		, _data(compute_full_size(_dims))
 		{ }
 
 		// variadic constructor
 		template <class... Args, RequireVariadicArray(Args, size_type, Dim)>
 		Lattice (Args... dims)
 		: _dims(make_array<size_type>(dims...))
-		, _data(compute_full_size(_dims))
 		, _strides(compute_strides(_dims))
 		, _lbs(default_lower_bounds())
 		, _ubs(default_upper_bounds())
+		, _data(compute_full_size(_dims))
 		{ }
 
 		// Named parameter idiom for handling the less significant details
 		template <class... Args, RequireVariadicArray(Args, coord_type, Dim)>
 		Lattice & set_lower_coords (Args... coords) {
-			_lbs = {coords...};
+			_lbs = {{coords...}};
 			return *this;
 		}
 
 		template <class... Args, RequireVariadicArray(Args, coord_type, Dim)>
 		Lattice & set_upper_coords (Args... coords) {
-			_ubs = {coords...};
+			_ubs = {{coords...}};
 			return *this;
 		}
 
@@ -111,13 +111,13 @@ class Lattice {
 		*/
 
 	private:
-		std::vector<T> _data;
-
 		std::array<size_type, Dim>       _dims;    // number of points in each dimension
 		std::array<difference_type, Dim> _strides; // index difference in each dimension
 
 		std::array<coord_type, Dim> _lbs; // first coordinate in each dimension
 		std::array<coord_type, Dim> _ubs; // last coordinate in each dimension
+
+		std::vector<T> _data; // The meat
 
 		static size_type compute_full_size(const std::array<size_type, Dim> & dims) {
 			// Product
