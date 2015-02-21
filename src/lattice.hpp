@@ -7,9 +7,28 @@
 
 // Adds SFINAE template members to check that the variadic template argument `A`
 //  contains `N` elements, all convertible to `T`.
+// Used to implement functions like .set_lower_coords(x, y, z)
 #define RequireVariadicArray(A,T,N) \
 	typename = typename std::enable_if<sizeof...(A)==(N)>::type, \
 	typename = typename std::enable_if<all_convertible_to<T, A...>::value>::type
+
+// Adds SFINAE template members to disable methods based on axis N, requiring that `Min <= N <= Max`.
+#define RequireAxis(N,Min,Max) \
+	axis_type RequestedAxis = (N), /* Dummy parameter */ \
+	typename = typename std::enable_if< (RequestedAxis >= (Min)) >::type, \
+	typename = typename std::enable_if< (RequestedAxis <= (Max)) >::type
+
+// Generates methods specific to an axis (size_0(), coord_step_0(), ...), which have the
+//  distinct advantage of *not existing* if you make a logical error and use an invalid axis.
+// (it also eliminates any question about the order of arguments to coord_n())
+#define GenerateAxisMethods(N) \
+	template <RequireAxis(N, 0, Dim-1)> inline size_type       size_##N ()             const { return size_n(N); } \
+	template <RequireAxis(N, 0, Dim-1)> inline coord_type      lower_coord_##N ()      const { return lower_coord_n(N); } \
+	template <RequireAxis(N, 0, Dim-1)> inline coord_type      upper_coord_##N ()      const { return upper_coord_n(N); } \
+	template <RequireAxis(N, 0, Dim-1)> inline coord_type      coord_length_##N ()     const { return coord_length_n(N); } \
+	template <RequireAxis(N, 0, Dim-1)> inline coord_type      coord_step_##N ()       const { return coord_step_n(N); } \
+	template <RequireAxis(N, 0, Dim-1)> inline coord_type      coord_##N (size_type i) const { return coord_n(N, i); } \
+	template <RequireAxis(N, 0, Dim-1)> inline difference_type stride_##N ()           const { return stride_n(N); }
 
 template <typename T, int Dim>
 class Lattice {
@@ -82,13 +101,24 @@ class Lattice {
 
 		// Per-axis features
 		// FIXME:  naming inconsistencies (xxx_coord vs coord_xxx,  and set_xxx should resemble xxx)
-		inline size_type       axis_size (axis_type n)          const { return _dims[n]; }
-		inline coord_type      lower_coord (axis_type n)        const { return _lbs[n]; }
-		inline coord_type      upper_coord (axis_type n)        const { return _ubs[n]; }
-		inline coord_type      coord_length (axis_type n)       const { return upper_coord(n) - lower_coord(n); }
-		inline coord_type      coord_step (axis_type n)         const { return coord_length(n) / (axis_size(n)-1); }
-		inline coord_type      coord (axis_type n, size_type i) const { return lower_coord(n) + i*coord_step(n); }
-		inline difference_type stride (axis_type n)             const { return _strides[n]; }
+		inline size_type       size_n (axis_type n)               const { return _dims[n]; }
+		inline coord_type      lower_coord_n (axis_type n)        const { return _lbs[n]; }
+		inline coord_type      upper_coord_n (axis_type n)        const { return _ubs[n]; }
+		inline coord_type      coord_length_n (axis_type n)       const { return upper_coord_n(n) - lower_coord_n(n); }
+		inline coord_type      coord_step_n (axis_type n)         const { return coord_length_n(n) / (size_n(n)-1); }
+		inline coord_type      coord_n (axis_type n, size_type i) const { return lower_coord_n(n) + i*coord_step_n(n); }
+		inline difference_type stride_n (axis_type n)             const { return _strides[n]; }
+
+		// Generate the numbered variants (_0, _1, _2, ...) of the above methods
+		GenerateAxisMethods(0);
+		GenerateAxisMethods(1);
+		GenerateAxisMethods(2);
+		GenerateAxisMethods(3);
+		GenerateAxisMethods(4);
+		GenerateAxisMethods(5);
+		GenerateAxisMethods(6);
+		GenerateAxisMethods(7);
+		GenerateAxisMethods(8);
 
 		// Waiting on this until I'm convinced that it's a reasonable part of the public API
 		// (would make more sense if I had axial iterators)
@@ -160,6 +190,7 @@ class Lattice {
 		}
 };
 
+// Shorthands
 template <class T> using Lattice1 = Lattice<T,1>;
 template <class T> using Lattice2 = Lattice<T,2>;
 template <class T> using Lattice3 = Lattice<T,3>;
