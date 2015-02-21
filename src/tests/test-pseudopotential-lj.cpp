@@ -19,12 +19,12 @@ void test_fit_to_lj (R & rng, std::array<size_t,3> dims, std::array<double,3> po
 		.set_lower_coords(0., 0., 0.5)
 		.set_upper_coords(1., 1., 0.9)
 	;
-	for (std::size_t i=0; i < data.axis_size(1); i++) {
-		for (std::size_t j=0; j < data.axis_size(2); j++) {
-			for (std::size_t k=0; k < data.axis_size(3); k++) {
-				double x = data.coord(1,i);
-				double y = data.coord(2,j);
-				double z = data.coord(3,k);
+	for (std::size_t i=0; i < data.axis_size(0); i++) {
+		for (std::size_t j=0; j < data.axis_size(1); j++) {
+			for (std::size_t k=0; k < data.axis_size(2); k++) {
+				double x = data.coord(0,i);
+				double y = data.coord(1,j);
+				double z = data.coord(2,k);
 				data(i, j, k) = lj.value_at(x, y, z);
 			}
 		}
@@ -52,11 +52,11 @@ TEST_CASE("pseudopotential-lj") {
 
 		SECTION("From a particle at z=0") {
 			// for this case, a polynomial regression will do
-			test_fit_to_lj (rng, {11, 11, 25}, {0.2, 0.3, 0.0});
+			test_fit_to_lj (rng, {{11, 11, 25}}, {{0.2, 0.3, 0.0}});
 		}
 		SECTION("From a particle at nonzero z") {
 			// this case is a bit less trivial
-			test_fit_to_lj (rng, {11, 11, 25}, {0.2, 0.3, 0.1}); // FAILS (low priority)
+			test_fit_to_lj (rng, {{11, 11, 25}}, {{0.2, 0.3, 0.1}}); // FAILS (low priority)
 		}
 	}
 }

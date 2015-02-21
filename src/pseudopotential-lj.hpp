@@ -27,30 +27,30 @@ class LJPseudoPotential {
 		// It's here so I can compare output, and should be removed in the future.
 		static LJPseudoPotential fit_to_data(Lattice3<T> potential)
 		{
-			LJPseudoPotential result {potential.axis_size(1), potential.axis_size(2)};
+			LJPseudoPotential result {potential.axis_size(0), potential.axis_size(1)};
 
 			// make coeff lattices in same shape and size as the potential
 
 			// FIXME omg wall of initialization  (this API won't cut it)
 			result.z0
-				.set_lower_coords(potential.lower_coord(1), potential.lower_coord(2))
-				.set_upper_coords(potential.upper_coord(1), potential.upper_coord(2));
+				.set_lower_coords(potential.lower_coord(0), potential.lower_coord(1))
+				.set_upper_coords(potential.upper_coord(0), potential.upper_coord(1));
 			result.coeff6
-				.set_lower_coords(potential.lower_coord(1), potential.lower_coord(2))
-				.set_upper_coords(potential.upper_coord(1), potential.upper_coord(2));
+				.set_lower_coords(potential.lower_coord(0), potential.lower_coord(1))
+				.set_upper_coords(potential.upper_coord(0), potential.upper_coord(1));
 			result.coeff12
-				.set_lower_coords(potential.lower_coord(1), potential.lower_coord(2))
-				.set_upper_coords(potential.upper_coord(1), potential.upper_coord(2));
+				.set_lower_coords(potential.lower_coord(0), potential.lower_coord(1))
+				.set_upper_coords(potential.upper_coord(0), potential.upper_coord(1));
 
 
 			// Collect z-coordinates of data set
-			Array<T, Dynamic, 1> zarr {potential.axis_size(3), 1};
-			for (std::size_t k=0; k < potential.axis_size(3); k++) {
-				zarr(k) = potential.coord(3,k);
+			Array<T, Dynamic, 1> zarr {potential.axis_size(2), 1};
+			for (std::size_t k=0; k < potential.axis_size(2); k++) {
+				zarr(k) = potential.coord(2,k);
 			}
 
 			// Generate coefficient matrix
-			Matrix<T, Dynamic, 2> xmat {potential.axis_size(3), 2};
+			Matrix<T, Dynamic, 2> xmat {potential.axis_size(2), 2};
 			xmat.col(0) = zarr.pow(-6);
 			xmat.col(1) = zarr.pow(-12);
 
@@ -58,12 +58,12 @@ class LJPseudoPotential {
 			auto solver = xmat.colPivHouseholderQr();
 
 			// Solve for a best fit along z at each (x,y)
-			for (std::size_t i=0; i < potential.axis_size(1); i++) {
-				for (std::size_t j=0; j < potential.axis_size(2); j++) {
+			for (std::size_t i=0; i < potential.axis_size(0); i++) {
+				for (std::size_t j=0; j < potential.axis_size(1); j++) {
 
 					// Collect potential data at (x,y)
-					Matrix<T, Dynamic, 1> pvec {potential.axis_size(3), 1};
-					for (std::size_t k=0; k < potential.axis_size(3); k++) {
+					Matrix<T, Dynamic, 1> pvec {potential.axis_size(2), 1};
+					for (std::size_t k=0; k < potential.axis_size(2); k++) {
 						pvec(k) = potential(i,j,k);
 					}
 
@@ -86,41 +86,41 @@ class LJPseudoPotential {
 
 		static LJPseudoPotential fit_to_data(Lattice3<T> potential, T tolerance=1E-9)
 		{
-			LJPseudoPotential result {potential.axis_size(1), potential.axis_size(2)};
+			LJPseudoPotential result {potential.axis_size(0), potential.axis_size(1)};
 
 			// make coeff lattices in same shape and size as the potential
 
 			// FIXME omg wall of initialization  (this API won't cut it)
 			result.z0
-				.set_lower_coords(potential.lower_coord(1), potential.lower_coord(2))
-				.set_upper_coords(potential.upper_coord(1), potential.upper_coord(2));
+				.set_lower_coords(potential.lower_coord(0), potential.lower_coord(1))
+				.set_upper_coords(potential.upper_coord(0), potential.upper_coord(1));
 			result.coeff6
-				.set_lower_coords(potential.lower_coord(1), potential.lower_coord(2))
-				.set_upper_coords(potential.upper_coord(1), potential.upper_coord(2));
+				.set_lower_coords(potential.lower_coord(0), potential.lower_coord(1))
+				.set_upper_coords(potential.upper_coord(0), potential.upper_coord(1));
 			result.coeff12
-				.set_lower_coords(potential.lower_coord(1), potential.lower_coord(2))
-				.set_upper_coords(potential.upper_coord(1), potential.upper_coord(2));
+				.set_lower_coords(potential.lower_coord(0), potential.lower_coord(1))
+				.set_upper_coords(potential.upper_coord(0), potential.upper_coord(1));
 
 			// Declare our main matrices & reserve memory
-			Array<T,  Dynamic, 1> zarr     {potential.axis_size(3), 1};
-			Array<T,  Dynamic, 1> varr     {potential.axis_size(3), 1};
-			Matrix<T, Dynamic, 1> errors   {potential.axis_size(3), 1};
-			Matrix<T, Dynamic, 3> jacobian {potential.axis_size(3), 3};
+			Array<T,  Dynamic, 1> zarr     {potential.axis_size(2), 1};
+			Array<T,  Dynamic, 1> varr     {potential.axis_size(2), 1};
+			Matrix<T, Dynamic, 1> errors   {potential.axis_size(2), 1};
+			Matrix<T, Dynamic, 3> jacobian {potential.axis_size(2), 3};
 
 			// Collect z data (our independent variable)
-			for (std::size_t k=0; k < potential.axis_size(3); k++)
-				zarr(k) = potential.coord(3,k);
+			for (std::size_t k=0; k < potential.axis_size(2); k++)
+				zarr(k) = potential.coord(2,k);
 
 			// Square sum error at each step
 			T prev_sqsum = std::numeric_limits<T>::max();
 			T this_sqsum = std::numeric_limits<T>::max();
 
 			// Solve for a best fit along z at each (x,y)
-			for (std::size_t i=0; i < potential.axis_size(1); i++) {
-				for (std::size_t j=0; j < potential.axis_size(2); j++) {
+			for (std::size_t i=0; i < potential.axis_size(0); i++) {
+				for (std::size_t j=0; j < potential.axis_size(1); j++) {
 
 					// Collect potential data (our dependent variable) at (x,y)
-					for (std::size_t k=0; k < potential.axis_size(3); k++)
+					for (std::size_t k=0; k < potential.axis_size(2); k++)
 						varr(k) = potential(i,j,k);
 
 					// Form initial guess, and unpack it into more meaningfully named vars
@@ -214,10 +214,10 @@ class LJPseudoPotential {
 	private:
 		// returns lattice indices of nearest point on lattice
 		int nearest_index_x (T x) {
-			return int((x - coeff6.lower_coord(1))/coeff6.coord_step(1) + 0.5);
+			return int((x - coeff6.lower_coord(0))/coeff6.coord_step(0) + 0.5);
 		}
 		int nearest_index_y (T y) {
-			return int((y - coeff6.lower_coord(2))/coeff6.coord_step(2) + 0.5);
+			return int((y - coeff6.lower_coord(1))/coeff6.coord_step(1) + 0.5);
 		}
 
 		Lattice2<T> z0;
