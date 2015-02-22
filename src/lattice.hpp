@@ -5,12 +5,15 @@
 
 #include "util/all-convertible-to.hpp"
 
+#define RequireAllConvertible(A,T) \
+	typename = typename std::enable_if<all_convertible_to<T, A...>::value>::type
+
 // Adds SFINAE template members to check that the variadic template argument `A`
 //  contains `N` elements, all convertible to `T`.
 // Used to implement functions like .set_lower_coords(x, y, z)
 #define RequireVariadicArray(A,T,N) \
 	typename = typename std::enable_if<sizeof...(A)==(N)>::type, \
-	typename = typename std::enable_if<all_convertible_to<T, A...>::value>::type
+	RequireAllConvertible(A,T)
 
 // Adds SFINAE template members to disable methods based on axis N, requiring that `Min <= N <= Max`.
 #define RequireAxis(N,Min,Max) \
@@ -124,7 +127,6 @@ class Lattice {
 		// (would make more sense if I had axial iterators)
 //		inline const_pointer data () { return _data.data(); }
 
-		/*
 		bool operator==(const Lattice<T, Dim> & other) const {
 			// deep comparison of all members
 			return
@@ -138,7 +140,6 @@ class Lattice {
 		bool operator!=(const Lattice<T, Dim> & other) const {
 			return !(*this == other);
 		};
-		*/
 
 	private:
 		std::array<size_type, Dim>       _dims;    // number of points in each dimension
@@ -188,7 +189,38 @@ class Lattice {
 				0
 			);
 		}
+
+		template <class TOut, class TIn, axis_type D>
+		friend Lattice<TOut, D> make_similar_lattice (const Lattice<TIn, D> &);
 };
+
+// make_similar_lattice<T>(sourceLattice)
+// Produces a lattice of T whose shape and coordinates are derived from sourceLattice.
+template <class TOut, class TIn, int Dim>
+Lattice<TOut, Dim>
+make_similar_lattice (const Lattice<TIn, Dim> & source)
+{
+	Lattice<TOut, Dim> result(source._dims);
+	result._lbs = source._lbs;
+	result._ubs = source._ubs;
+	return result;
+}
+
+// make_sub_lattice<T>(sourceLattice, axis1, axis2, ..., axisN)
+// Produces an N-dimensional lattice of T, basing the coordinates and size of each
+//   axis on a specified axis from sourceLattice.
+template <
+	class TOut, class SourceLattice, class... Args,
+	RequireAllConvertible(Args, typename SourceLattice::axis_type)
+>
+Lattice<TOut, sizeof...(Args)>
+make_sub_lattice (const SourceLattice & lattice, Args... axes)
+{
+	return Lattice<TOut, sizeof...(Args)>(lattice.size_n(axes)...)
+		.set_lower_coords(lattice.lower_coord_n(axes)...)
+		.set_upper_coords(lattice.upper_coord_n(axes)...)
+	;
+}
 
 // Shorthands
 template <class T> using Lattice1 = Lattice<T,1>;

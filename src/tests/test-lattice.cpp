@@ -58,5 +58,14 @@ TEST_CASE("Lattice dimensions") {
 		REQUIRE( m.stride_1() == 3   );
 		REQUIRE( m.stride_2() == 1   );
 	}
+}
 
+TEST_CASE("Making lattices derived from others") {
+	Lattice<double,3> m(12, 10, 15);
+	m.set_lower_coords(0.5, 1.7, 0.1);
+	m.set_upper_coords(5.1, 9.2, 8.6);
+	SECTION("Invoking make_sub_lattice with 0, 1, ..., D-1 is equivalent to make_similar_lattice") {
+		REQUIRE( make_similar_lattice<double>(m) == make_sub_lattice<double>(m, 0, 1, 2) );
+		REQUIRE( make_similar_lattice<double>(m) != make_sub_lattice<double>(m, 0, 2, 1) );
+	}
 }

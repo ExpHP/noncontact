@@ -29,19 +29,10 @@ class LJPseudoPotential {
 		{
 			LJPseudoPotential result {potential.axis_size(0), potential.axis_size(1)};
 
-			// make coeff lattices in same shape and size as the potential
-
-			// FIXME omg wall of initialization  (this API won't cut it)
-			result.z0
-				.set_lower_coords(potential.lower_coord_0(), potential.lower_coord_1())
-				.set_upper_coords(potential.upper_coord_0(), potential.upper_coord_1());
-			result.coeff6
-				.set_lower_coords(potential.lower_coord_0(), potential.lower_coord_1())
-				.set_upper_coords(potential.upper_coord_0(), potential.upper_coord_1());
-			result.coeff12
-				.set_lower_coords(potential.lower_coord_0(), potential.lower_coord_1())
-				.set_upper_coords(potential.upper_coord_0(), potential.upper_coord_1());
-
+			// make coeff lattices in the shape of the x & y dimensions of potential
+			result.z0      = make_sub_lattice<T>(potential, 0, 1);
+			result.coeff6  = make_sub_lattice<T>(potential, 0, 1);
+			result.coeff12 = make_sub_lattice<T>(potential, 0, 1);
 
 			// Collect z-coordinates of data set
 			Array<T, Dynamic, 1> zarr {potential.size_2(), 1};
@@ -88,18 +79,10 @@ class LJPseudoPotential {
 		{
 			LJPseudoPotential result {potential.size_0(), potential.size_1()};
 
-			// make coeff lattices in same shape and size as the potential
-
-			// FIXME omg wall of initialization  (this API won't cut it)
-			result.z0
-				.set_lower_coords(potential.lower_coord_0(), potential.lower_coord_1())
-				.set_upper_coords(potential.upper_coord_0(), potential.upper_coord_1());
-			result.coeff6
-				.set_lower_coords(potential.lower_coord_0(), potential.lower_coord_1())
-				.set_upper_coords(potential.upper_coord_0(), potential.upper_coord_1());
-			result.coeff12
-				.set_lower_coords(potential.lower_coord_0(), potential.lower_coord_1())
-				.set_upper_coords(potential.upper_coord_0(), potential.upper_coord_1());
+			// make coeff lattices in the shape of the x & y dimensions of potential
+			result.z0      = make_sub_lattice<T>(potential, 0, 1);
+			result.coeff6  = make_sub_lattice<T>(potential, 0, 1);
+			result.coeff12 = make_sub_lattice<T>(potential, 0, 1);
 
 			// Declare our main matrices & reserve memory
 			Array<T,  Dynamic, 1> zarr     {potential.size_2(), 1};
