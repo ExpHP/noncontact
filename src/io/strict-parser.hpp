@@ -105,6 +105,24 @@ public:
 		return result;
 	}
 
+	// Reads any empty space remaining on the line, and advances the wrapped stream
+	//  to the beginning of the next line (or to the end of the file), similarly to
+	//  expect_line().
+	// Unlike expect_line(), expect_end_of_line() expects the rest of the line to
+	//  be empty. A StrictParser::ParseError is thrown if any tokens are encountered.
+	void expect_end_of_line () {
+		auto line = expect_line();
+
+		std::istringstream stream(line);
+		std::string word;
+
+		if (stream >> word) {
+			std::string errmsg;
+			errmsg = errmsg + "Expected end of line, found \"" + word + "\"";
+			throw ParseError(errmsg);
+		}
+	}
+
 	// If there are no non-whitespace characters left in the stream, advances the input
 	//  stream to the end.
 	// Otherwise, leaves the stream in an undefined state and throws a StrictParser::ParseError.
@@ -112,7 +130,7 @@ public:
 		std::string word;
 		if (_in >> word) {
 			std::string errmsg;
-			errmsg = errmsg + "Expected end, found \"" + word + "\"";
+			errmsg = errmsg + "Expected end of stream, found \"" + word + "\"";
 			throw ParseError(errmsg);
 		}
 		assert(_in.eof());

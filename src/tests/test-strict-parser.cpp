@@ -43,6 +43,11 @@ void test_end_of_content(const char * s) {
 	StrictParser(ss).expect_end_of_content();
 }
 
+void test_end_of_line(const char * s) {
+	istringstream ss(s);
+	StrictParser(ss).expect_end_of_line();
+}
+
 std::string stringify(unsigned long x) {
 	ostringstream ss;
 	ss << x;
@@ -77,8 +82,12 @@ TEST_CASE("Strict Parser") {
 			REQUIRE( test_line("line 1\n line 2")   == "line 1" );
 			REQUIRE( test_line("\n") == "" );
 			REQUIRE( test_line(" \t ") == " \t " );
+
+			// TODO: The current behavior is to fail on an empty string, (even if the eof
+			//       bit is not yet set). Its debatable whether or not this is desirable.
 			REQUIRE_THROWS_AS( test_line(""), StrictParser::ParseError );
 		}
+
 		SECTION("Location of cursor after expect_line") {
 			istringstream ss("Line 1\nLine 2");
 			StrictParser parser(ss);
@@ -164,4 +173,31 @@ TEST_CASE("Strict Parser") {
 			REQUIRE_NOTHROW( parser.expect_end_of_content() ); // multiple calls okay
 		}
 	}
+
+	SECTION("Asserting End of Line") {
+		SECTION("Simple cases") {
+			REQUIRE_NOTHROW( test_end_of_line("   \t\t  \n") );
+			REQUIRE_NOTHROW( test_end_of_line("   \t\t  ") );
+			REQUIRE_THROWS_AS( test_end_of_line("a"), StrictParser::ParseError );
+			REQUIRE_THROWS_AS( test_end_of_line("  lol \n  lol \n"), StrictParser::ParseError );
+
+			// TODO: The current behavior is to fail on an empty string, (even if the eof
+			//       bit is not yet set). Its debatable whether or not this is desirable.
+			REQUIRE_THROWS_AS( test_end_of_line(""), StrictParser::ParseError );
+		}
+		SECTION("Location of cursor after expect_end_of_line") {
+			string s = "   \t\t\n \t";
+			stringstream ss(s);
+			StrictParser parser(ss);
+
+			REQUIRE_NOTHROW( parser.expect_end_of_line() );
+			REQUIRE( ss.tellg() == 6 ); // the space after the newline
+			REQUIRE_NOTHROW( parser.expect_end_of_line() );
+			REQUIRE( ss.eof() );
+
+			// calling again after reaching the end of a file is NOT okay
+			REQUIRE_THROWS_AS( parser.expect_end_of_line(), StrictParser::ParseError );
+		}
+	}
+
 }
