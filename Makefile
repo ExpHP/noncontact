@@ -6,6 +6,12 @@
 #CXXFLAGS += -Wall -Wextra -pedantic -std=c++0x -O3 -g -L/usr/lib -L./bin
 CXXFLAGS += -Wall -Wextra -pedantic -std=c++0x -g -L/usr/lib -L./bin
 
+# Require switches on enums to have complete coverage
+CXXFLAGS += -Werror=switch
+
+# Make initialization of aggregate types safe
+CXXFLAGS += -Werror=missing-field-initializers
+
 #=====================================
 # Dependencies
 
