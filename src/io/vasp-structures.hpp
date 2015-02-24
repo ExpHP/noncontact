@@ -134,7 +134,8 @@ public:
 		std::size_t oldsize = size();
 		std::size_t newsize = oldsize + count;
 
-		// initialize
+		_speciesEndpoints.push_back(newsize);
+
 		_coords.resize(newsize, DEFAULT_COORDS);
 
 		assert(size() == newsize);
@@ -173,6 +174,9 @@ private:
 	// invariant: _speciesEndpoints.back() == size()
 };
 
+// Despite its complete declaration __and__ initialization above, this is required for some reason.
+// dangit c++ y u no sanity
+constexpr std::array<double,3> VaspParticleList::DEFAULT_COORDS;
 
 // Represents a complete LOCPOT file
 // (this is an aggregate type, so it may be initialized using brace syntax)
