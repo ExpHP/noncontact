@@ -12,6 +12,9 @@ CXXFLAGS += -Werror=switch
 # Make initialization of aggregate types safe
 CXXFLAGS += -Werror=missing-field-initializers
 
+# Catch missing return from non-void function
+CXXFLAGS += -Werror=return-type
+
 #=====================================
 # Dependencies
 

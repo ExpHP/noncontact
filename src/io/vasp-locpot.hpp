@@ -97,6 +97,8 @@ public:
 			expect_flag_line(obj);
 
 		expect_particle_lines(obj);
+
+		return obj;
 	}
 
 private:
@@ -178,7 +180,7 @@ private:
 
 	// FIXME
 	bool has_selective_dynamics() {
-		throw LazyProgrammerError("Parsing of selective dynamics not implemented");
+		return false;
 	}
 
 	void expect_particle_lines (VaspParticleList & obj) {
