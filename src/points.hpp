@@ -68,6 +68,22 @@ Point<Basis> make_point (double a, double b, double c, Basis basis) {
 }
 
 //--------------------------------------
+// Default definition of transform
+
+// TODO: This requires some SFINAE magic to make sure neither type is Cartesian.
+//  Otherwise, when applied to a type missing a Cartesian conversion, it will
+//   successfully compile to a function that infinitely recurses (!!!)
+
+// This is our "fallback" converter.  When converting between two bases
+//  with no specialized conversion function, it will convert to Cartesian
+//  first, then to the new type.
+template <class FromBasis, class ToBasis>
+Point<ToBasis> transform (const Point<FromBasis> & point, ToBasis basis)
+{
+	return transform(transform(point, Cartesian{}), basis);
+}
+
+//--------------------------------------
 // Specializations of transform
 
 // Cartesian -> Cartesian
@@ -87,8 +103,6 @@ template<> auto transform (const Point<Spherical> & point, Spherical basis) -> P
 {
 	return point;
 }
-
-//--------------------------------------
 
 // Cartesian -> Cylindrical
 template<> auto transform (const Point<Cartesian> & point, Cylindrical basis) -> Point<decltype(basis)>
