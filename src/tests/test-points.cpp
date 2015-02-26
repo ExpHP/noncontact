@@ -9,6 +9,10 @@
 #include <ctime>
 
 #include "../points.hpp"
+#include "../points/spherical.hpp"
+#include "../points/cylindrical.hpp"
+#include "../points/vectorbasis.hpp"
+#include "../points/scaled.hpp"
 
 using namespace std;
 
