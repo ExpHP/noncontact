@@ -13,7 +13,12 @@
 struct ScaledCartesian
 {
 public:
+	ScaledCartesian (double scale)
+	: _scale(scale)
+	{ }
+
 	double scale () const { return _scale; }
+
 private:
 	double _scale;
 };

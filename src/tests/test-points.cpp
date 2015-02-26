@@ -2,7 +2,7 @@
 
 #include <string>
 #include <sstream>
-#include <istream>
+#include <iostream>
 #include <climits>
 #include <cstdlib>
 #include <random>
@@ -31,8 +31,11 @@ void require_approx_eq (Point<B> a, Point<B> b) {
 template <class Basis>
 Point<Basis> random_point (Basis basis);
 
+template <class Basis>
+Basis random_basis ();
+
 template <>
-Point<Cartesian> random_point <Cartesian> (Cartesian basis) {
+auto random_point (Cartesian basis) -> Point<decltype(basis)> {
 	auto distribution = std::uniform_real_distribution<double> {-10., 10.};
 
 	double x = distribution(RNG);
@@ -43,7 +46,7 @@ Point<Cartesian> random_point <Cartesian> (Cartesian basis) {
 }
 
 template <>
-Point<Cylindrical> random_point <Cylindrical> (Cylindrical basis) {
+auto random_point (Cylindrical basis) -> Point<decltype(basis)> {
 	double r = std::uniform_real_distribution<double> {0., 10.} (RNG);
 	double p = std::uniform_real_distribution<double> {0., 8.*atan(1.)} (RNG);
 	double z = std::uniform_real_distribution<double> {-10., 10.} (RNG);
@@ -52,12 +55,26 @@ Point<Cylindrical> random_point <Cylindrical> (Cylindrical basis) {
 }
 
 template <>
-Point<Spherical> random_point <Spherical> (Spherical basis) {
+auto random_point (Spherical basis) -> Point<decltype(basis)> {
 	double r = std::uniform_real_distribution<double> {0., 10.} (RNG);
 	double t = std::uniform_real_distribution<double> {0., 8.*atan(1.)} (RNG);
 	double p = std::uniform_real_distribution<double> {0., 4.*atan(1.)} (RNG);
 
 	return make_point(r,t,p,basis);
+}
+
+template <>
+auto random_point (ScaledCartesian basis) -> Point<decltype(basis)> {
+	// Just make a random cartesian point and use its coords
+	auto src = random_point(Cartesian{});
+	return make_point(src.first(),src.second(),src.third(),basis);
+}
+
+template <>
+auto random_point (VectorBasis basis) -> Point<decltype(basis)> {
+	// Just make a random cartesian point and use its coords
+	auto src = random_point(Cartesian{});
+	return make_point(src.first(),src.second(),src.third(),basis);
 }
 
 //--------------------------------------
@@ -111,10 +128,58 @@ TEST_CASE("Reversibility of built-in coordinate systems") {
 		require_approx_eq(original, viaCylindrical);
 		require_approx_eq(original, viaSpherical);
 	}
+
+	// Some fixed arbitrary scale
+	ScaledCartesian scaledbasis {0.45};
+	SECTION("ScaledCartesian => Cartesian and back") {
+		test_reversibility(scaledbasis, Cartesian{}, 5);
+	}
+	SECTION("Cartesian => ScaledCartesian and back") {
+		test_reversibility(Cartesian{}, scaledbasis, 5);
+	}
+
+	// Some fixed arbitrary vector basis
+	VectorBasis vectorbasis {{
+		{+9.644, +0.657,  +15.392 },
+		{-5.955, +17.859, -1.445  },
+		{-8.205, -10.555, +19.556 }
+	}};
+	SECTION("VectorBasis => Cartesian and back") {
+		test_reversibility(vectorbasis, Cartesian{}, 5);
+	}
+	SECTION("Cartesian => VectorBasis and back") {
+		test_reversibility(Cartesian{}, vectorbasis, 5);
+	}
+
 }
 
 //--------------------------------------
 
+TEST_CASE("Simple VectorBasis tests") {
+	// A simple vector basis which permutes axes
+	VectorBasis vectorbasis {{
+		{0., 1. ,0. },
+		{0., 0. ,1. },
+		{1., 0., 0. }
+	}};
+
+	SECTION("Cartesian => Simple VectorBasis") {
+		require_approx_eq(
+			make_point(4.,5.,6.,Cartesian{}).transform(vectorbasis),
+			make_point(6.,4.,5.,vectorbasis)
+		);
+	}
+	SECTION("Simple VectorBasis => Cartesian") {
+		require_approx_eq(
+			make_point(4.,5.,6.,vectorbasis).transform(Cartesian{}),
+			make_point(5.,6.,4.,Cartesian{})
+		);
+	}
+}
+
+//--------------------------------------
+
+// Conversions from a coordinate system to itself
 template <class Basis>
 void test_trivial (Basis basis) {
 	auto original = random_point(basis);
