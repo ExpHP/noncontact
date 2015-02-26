@@ -35,7 +35,7 @@ template<> auto transform (const Point<VectorBasis> & point, Cartesian basis) ->
 template<> auto transform (const Point<Cartesian> & point, VectorBasis basis) -> Point<decltype(basis)>
 {
 	// Eigen wrappers for raw pointers
-	Eigen::Map<Eigen::Matrix3d> matrix (&(basis.vectors[0][0]));
+	Eigen::Map<Eigen::Matrix<double,3,3,Eigen::RowMajor>> matrix (&(basis.vectors[0][0]));
 	Eigen::Map<const Eigen::Vector3d> product (point.data());
 
 	// get QR decomposition
