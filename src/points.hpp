@@ -7,14 +7,38 @@
 #include <cassert>
 
 //--------------------------------------
+// A basis so important we can't declare anything without it!
+class Cartesian { };
+
+//--------------------------------------
 // Forward declarations
 
 template <class Basis> class Point;
 
-// Template for the free-function version of transform.
+// Templates for the free-function version of transform.
 // Implementations of this function are provided through template specializations.
+// Unfortunately, this defers the errors for any missing implementations until the
+// linking stage, which are not as helpful as enable_if errors. (FIXME?)
+
+// For conversions between two non-Cartesian types.
+// This has a default implementation, which uses Cartesian as an intermediate format.
 template <class FromBasis, class ToBasis>
 Point<ToBasis> transform (const Point<FromBasis> & point, ToBasis basis);
+
+// For conversions to and from Cartesian.
+// These are REQUIRED to be specialized for each Basis.
+// They do NOT have a default implementation.
+// (note: while the templates themselves aren't strictly necessary, they are here to
+//   prevent Cartesian transformations from matching the above template and causing
+//   an infinite loop in the event that one of the specializations is missing.)
+template <class FromBasis>
+Point<Cartesian> transform (const Point<FromBasis> & point, Cartesian basis);
+template <class ToBasis>
+Point<ToBasis> transform (const Point<Cartesian> & point, ToBasis basis);
+
+// For Cartesian to Cartesian.
+// This exists to resolve an ambiguous match (the above two templates tie)
+auto transform (const Point<Cartesian> & point, Cartesian basis) -> Point<decltype(basis)>;
 
 //--------------------------------------
 
@@ -53,12 +77,11 @@ private:
 
 //--------------------------------------
 // Some Bases
-struct Cartesian   { };
 struct Cylindrical { };
 struct Spherical   { };
 
 //--------------------------------------
-// A function-style constructor so that the type of Basis can be inferred.
+// A function-style constructor where the type of Basis can be inferred.
 // e.g.
 // make_point(a, b, c, Cartesian())
 // make_point(a, b, c, my_cool_basis)
@@ -69,10 +92,6 @@ Point<Basis> make_point (double a, double b, double c, Basis basis) {
 
 //--------------------------------------
 // Default definition of transform
-
-// TODO: This requires some SFINAE magic to make sure neither type is Cartesian.
-//  Otherwise, when applied to a type missing a Cartesian conversion, it will
-//   successfully compile to a function that infinitely recurses (!!!)
 
 // This is our "fallback" converter.  When converting between two bases
 //  with no specialized conversion function, it will convert to Cartesian
@@ -86,8 +105,8 @@ Point<ToBasis> transform (const Point<FromBasis> & point, ToBasis basis)
 //--------------------------------------
 // Specializations of transform
 
-// Cartesian -> Cartesian
-template<> auto transform (const Point<Cartesian> & point, Cartesian basis) -> Point<decltype(basis)>
+// Cartesian -> Cartesian (separate overload, not a template specialization)
+auto transform (const Point<Cartesian> & point, Cartesian basis) -> Point<decltype(basis)>
 {
 	return point;
 }

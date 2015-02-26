@@ -55,6 +55,7 @@ Point<Spherical> random_point <Spherical> (Spherical basis) {
 
 	return make_point(r,t,p,basis);
 }
+
 //--------------------------------------
 
 template <class Basis1, class Basis2>
@@ -66,34 +67,6 @@ void test_reversibility (Basis1 b1, Basis2 b2, int repeat) {
 
 		require_approx_eq(original, recovered);
 	}
-}
-
-//--------------------------------------
-
-// A Basis written exclusively for this test which has no explicit conversions to any other type.
-// It is a Cartesian point with permuted axes (its basis vectors are y,z,x).
-class TestBasis { };
-
-// Cartesian -> TestBasis
-template<> auto transform (const Point<Cartesian> & point, TestBasis basis) -> Point<decltype(basis)>
-{
-	return {
-		point.second(),
-		point.third(),
-		point.first(),
-		basis
-	};
-}
-
-// TestBasis -> Cartesian
-template<> auto transform (const Point<TestBasis> & point, Cartesian basis) -> Point<decltype(basis)>
-{
-	return {
-		point.third(),
-		point.first(),
-		point.second(),
-		basis
-	};
 }
 
 //--------------------------------------
@@ -136,6 +109,48 @@ TEST_CASE("Reversibility of built-in coordinate systems") {
 	}
 }
 
+//--------------------------------------
+
+template <class Basis>
+void test_trivial (Basis basis) {
+	auto original = random_point(basis);
+	auto converted1 = original.transform(basis);  // Member function
+	auto converted2 = transform(original, basis); // Free function
+
+	require_approx_eq(original, converted1);
+	require_approx_eq(original, converted2);
+}
+
+TEST_CASE("Trivial conversions") {
+	test_trivial(Cartesian{});
+	test_trivial(Cylindrical{});
+	test_trivial(Spherical{});
+}
+
+//--------------------------------------
+
+// A Basis written exclusively for this test.
+// It has an explicit conversion to Spherical, but not to Cylindrical.
+// It is a Cartesian point with permuted axes (its basis vectors are y,z,x).
+class TestBasis { };
+
+// Cartesian -> TestBasis
+template<> auto transform (const Point<Cartesian> & point, TestBasis basis) -> Point<decltype(basis)>
+{
+	return { point.second(), point.third(), point.first(), basis };
+}
+
+// TestBasis -> Cartesian
+template<> auto transform (const Point<TestBasis> & point, Cartesian basis) -> Point<decltype(basis)>
+{
+	return { point.third(), point.first(), point.second(), basis };
+}
+
+// TestBasis -> Spherical
+template<> auto transform (const Point<TestBasis> & point, Spherical basis) -> Point<decltype(basis)>
+{
+	throw float(1234); // something unusual and easily detected
+}
 
 TEST_CASE("Test fallback mechanism") {
 
@@ -158,8 +173,19 @@ TEST_CASE("Test fallback mechanism") {
 		auto fromCartesian = cartesian.transform(Cylindrical{});
 
 		// because TestBasis => Cylindrical is not implemented, this will use the fallback:
-		auto fromTestbasis = testbasis.transform(Cylindrical{});
+		auto fromTestbasis1 = testbasis.transform(Cylindrical{}); // member function
+		auto fromTestbasis2 = transform(testbasis,Cylindrical{}); // free function
 
-		require_approx_eq(fromTestbasis, fromCartesian);
+		require_approx_eq(fromTestbasis1, fromCartesian);
+		require_approx_eq(fromTestbasis2, fromCartesian);
+	}
+
+	SECTION("Test that fallback isn't used when not needed") {
+		auto point = make_point(0.,0.,0., TestBasis{});
+
+		// TestBasis => Spherical is implemented, and throws a float
+		//  (something which the fallback certainly does not do!)
+		REQUIRE_THROWS_AS(point.transform(Spherical{}),  float); // member function
+		REQUIRE_THROWS_AS(transform(point, Spherical{}), float); // free function
 	}
 }
