@@ -9,6 +9,7 @@
 #include <ctime>
 
 #include "../points.hpp"
+#include "../points/point-collection.hpp"
 #include "../points/spherical.hpp"
 #include "../points/cylindrical.hpp"
 #include "../points/vectorbasis.hpp"
@@ -25,6 +26,13 @@ void require_approx_eq (Point<B> a, Point<B> b) {
 	REQUIRE( a.first()  == Approx(b.first())  );
 	REQUIRE( a.second() == Approx(b.second()) );
 	REQUIRE( a.third()  == Approx(b.third())  );
+}
+
+template <class B>
+void require_approx_eq (PointCollection<B> a, PointCollection<B> b) {
+	REQUIRE( a.size() == b.size() );
+	for (std::size_t i=0; i<a.size(); ++i)
+		require_approx_eq( a.point(i), b.point(i) );
 }
 
 //--------------------------------------
@@ -67,14 +75,23 @@ template <>
 auto random_point (ScaledCartesian basis) -> Point<decltype(basis)> {
 	// Just make a random cartesian point and use its coords
 	auto src = random_point(Cartesian{});
-	return make_point(src.first(),src.second(),src.third(),basis);
+	return tag_point(src.as_raw(),basis);
 }
 
 template <>
 auto random_point (VectorBasis basis) -> Point<decltype(basis)> {
 	// Just make a random cartesian point and use its coords
 	auto src = random_point(Cartesian{});
-	return make_point(src.first(),src.second(),src.third(),basis);
+	return tag_point(src.as_raw(),basis);
+}
+
+//--------------------------------------
+template <class Basis>
+PointCollection<Basis> random_point_collection (Basis basis, std::size_t n) {
+	PointCollection<Basis> collection(basis);
+	for (std::size_t i=0; i<n; ++i)
+		collection.emplace_back(random_point(basis).as_raw());
+	return collection;
 }
 
 //--------------------------------------
@@ -257,4 +274,73 @@ TEST_CASE("Test fallback mechanism") {
 		REQUIRE_THROWS_AS(point.transform(Spherical{}),  float); // member function
 		REQUIRE_THROWS_AS(transform(point, Spherical{}), float); // free function
 	}
+
+}
+
+//--------------------------------------
+
+
+
+TEST_CASE("Test that Point Collections are not horribly broken") {
+	auto collection = make_point_collection(Cartesian{});
+
+	collection.emplace_back(RawPoint{{20.,30.,40.}});
+	collection.emplace_back(RawPoint{{10.,2.3,4.}});
+	collection.emplace_back(RawPoint{{-2.,0.,1.}});
+	REQUIRE( collection.size() == 3 );
+
+	REQUIRE( collection.point(1).second() == Approx(2.3) );
+
+	// modify through operator[]
+	collection[1][1] = 4.5;
+	REQUIRE( collection.point(1).second() == Approx(4.5) );
+
+	// raw() and point() should have the same behavior (both modify, or neither modify).
+	// Current contract is that neither permit modification. 
+
+	collection.point(1).second() = 1.2;
+	REQUIRE( collection.point(1).second() == Approx(4.5) );
+
+	collection.raw(1)[1] = 2.0;
+	REQUIRE( collection.point(1).second() == Approx(4.5) );
+}
+
+TEST_CASE("Conversions on point collections") {
+
+	SECTION("Test fallback to point conversion") {
+		auto cartesian = make_point_collection(Cartesian{});
+		cartesian.emplace_back(RawPoint{{4.,5.,6.}});
+		cartesian.emplace_back(RawPoint{{10.,100.,1000.}});
+		cartesian.emplace_back(RawPoint{{3.,2.,1.}});
+
+		auto expected = make_point_collection(TestBasis{});
+		expected.emplace_back(RawPoint{{5.,6.,4.}});
+		expected.emplace_back(RawPoint{{100.,1000.,10.}});
+		expected.emplace_back(RawPoint{{2.,1.,3.}});
+
+		require_approx_eq(cartesian.transform(TestBasis{}), expected);
+	}
+
+	SECTION("Test fallback to point conversion, when it falls back to Cartesian") { // words
+		auto cartesian = random_point_collection(Cartesian{}, 3);
+		auto testbasis = cartesian.transform(TestBasis{});
+
+		auto fromCartesian = cartesian.transform(Cylindrical{});
+		auto fromTestbasis1 = testbasis.transform(Cylindrical{}); // member function
+		auto fromTestbasis2 = transform(testbasis,Cylindrical{}); // free function
+
+		require_approx_eq(fromTestbasis1, fromCartesian);
+		require_approx_eq(fromTestbasis2, fromCartesian);
+	}
+
+	SECTION("Test fallback to point conversion, when Cartesian fallback isn't needed") { // arghfffbl
+		// let's just make a collection of one point
+		auto point = make_point(0.,0.,0., TestBasis{});
+		auto points = PointCollection<TestBasis>(TestBasis{}); // lazy
+		points.emplace_back(point.as_raw());
+
+		REQUIRE_THROWS_AS(points.transform(Spherical{}),  float); // member function
+		REQUIRE_THROWS_AS(transform(points, Spherical{}), float); // free function
+	}
+
 }

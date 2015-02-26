@@ -36,6 +36,10 @@ auto transform (const Point<Cartesian> & point, Cartesian basis) -> Point<declty
 
 //--------------------------------------
 
+// Data storage format of points.
+// Anything that implements .data() and the std tuple interface. (std::get and friends)
+typedef std::array<double, 3> RawPoint;
+
 // TODO: (maybe) implement tuple interface (std::get, etc...)
 // TODO: (maybe) have more meaningfully named member funcs (x(), y(), z() for Cartesian,
 //       radius(), azimuth() etc. for Spherical...).  Perhaps possible through CRTP?
@@ -45,7 +49,12 @@ class Point
 public:
 
 	Point (double a, double b, double c, Basis basis)
-	: _coords {a, b, c}
+	: _coords {{a, b, c}}
+	, _basis(basis)
+	{ }
+
+	Point (RawPoint raw, Basis basis)
+	: _coords(raw)
 	, _basis(basis)
 	{ }
 
@@ -56,22 +65,25 @@ public:
 		return ::transform(*this, newBasis);
 	}
 
-	double * data () { return _coords; }
-	const double * data () const { return _coords; }
+	RawPoint & as_raw () { return _coords; }
+	const RawPoint & as_raw () const { return _coords; }
+
+	double * data () { return _coords.data(); }
+	const double * data () const { return _coords.data(); }
 
 	Basis & basis () { return _basis; }
 	Basis basis () const { return _basis; }
 
 	// not sure how I feel about these; specialized names for each basis would be frendlier
-	double & first  () { return _coords[0]; }
-	double & second () { return _coords[1]; }
-	double & third  () { return _coords[2]; }
-	double first  () const { return _coords[0]; }
-	double second () const { return _coords[1]; }
-	double third  () const { return _coords[2]; }
+	double & first  () { return std::get<0>(_coords); }
+	double & second () { return std::get<1>(_coords); }
+	double & third  () { return std::get<2>(_coords); }
+	double first  () const { return std::get<0>(_coords); }
+	double second () const { return std::get<1>(_coords); }
+	double third  () const { return std::get<2>(_coords); }
 
 private:
-	double _coords[3];
+	RawPoint _coords;
 	Basis _basis;
 };
 
@@ -83,6 +95,11 @@ private:
 template <class Basis>
 Point<Basis> make_point (double a, double b, double c, Basis basis) {
 	return Point<Basis>(a, b, c, basis);
+}
+
+template <class Basis>
+Point<Basis> tag_point (RawPoint raw, Basis basis) {
+	return Point<Basis>(raw, basis);
 }
 
 //--------------------------------------
