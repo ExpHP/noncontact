@@ -1,8 +1,6 @@
 #pragma once
 
-// class Cartesian { };
-
-#include "../points.hpp"
+#include "point.hpp"
 
 //--------------------------------------
 // Forward declarations

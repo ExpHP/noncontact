@@ -5,7 +5,7 @@
 
 #include <Eigen/Dense>
 
-#include "../points.hpp"
+#include "point.hpp"
 
 // Cartesian coordinates, divided by a uniform scale factor.
 // (To be crystal clear: we multiply when converting TO cartesian,

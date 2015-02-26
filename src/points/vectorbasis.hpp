@@ -5,7 +5,7 @@
 
 #include <Eigen/Dense>
 
-#include "../points.hpp"
+#include "point.hpp"
 
 // VectorBasis is a basis of 3 arbitrary cartesian vectors.  The vectors need not
 //  be orthonormal, so long as they are linearly independent.
