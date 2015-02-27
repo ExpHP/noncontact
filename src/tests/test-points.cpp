@@ -231,6 +231,20 @@ template<> RawPoint transform (const RawPoint & point, const TestBasis &, const 
 	throw float(1234); // something unusual and easily detected
 }
 
+// Note: Here is an explicit instantiation of the function that is supposed to use the below
+//         definition of transform_range. If uncommented, it will instantiate the method early
+//         and cause it to bind to the default implementation of transform_range instead,
+//         breaking one of the tests.
+//      (if placed below the method, it will have no effect)
+//template PointCollection<Cartesian> PointCollection<TestBasis>::transform<Cartesian>(Cartesian) const;
+
+// TestBasis -> Cartesian (range)
+template <class InIter, class OutIter>
+void transform_range (InIter begin, InIter end, OutIter out, const TestBasis &, const Cartesian &)
+{
+	throw int(92); // something unusual and easily detected
+}
+
 TEST_CASE("Test fallback mechanism") {
 
 	SECTION("Test the test basis") {
@@ -296,6 +310,15 @@ TEST_CASE("Test that Point Collections are not horribly broken") {
 }
 
 TEST_CASE("Conversions on point collections") {
+
+	SECTION("Test explicitly implemented collection conversions") {
+		auto testbasis = make_point_collection(TestBasis{});
+		testbasis.emplace_back(RawPoint{{5.,6.,4.}});
+		testbasis.emplace_back(RawPoint{{100.,1000.,10.}});
+		testbasis.emplace_back(RawPoint{{2.,1.,3.}});
+
+		REQUIRE_THROWS_AS(testbasis.transform(Cartesian{}), int);
+	}
 
 	SECTION("Test fallback to point conversion") {
 		auto cartesian = make_point_collection(Cartesian{});

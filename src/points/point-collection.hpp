@@ -10,7 +10,14 @@ template <class Basis> class PointCollection;
 typedef std::vector<RawPoint> RawPointCollection;
 
 // Templates for the free-function version of transform.
-// Implementations of this function are provided through template specializations.
+// Implementations of this function are provided through templated overloads.
+
+// TODO: Due to the Iterator parameters, it is impractical to fully specialize this template,
+//         meaning it must be overloaded instead, which is an issue if we overload it after
+//         already defining a class that uses it. (it will silently compile to use the default impl!)
+//       Note that overloading DOES seem to work in most cases due to the very late instantiation
+//         of PointCollection::transform(), but I'm still nervous.
+//       Would partially specializing a struct be any more reliable? (or just as bad?)
 
 template <class InIter, class OutIter, class FromBasis, class ToBasis>
 void transform_range (InIter pointsBegin, InIter pointsEnd, OutIter out, const FromBasis &, const ToBasis &);
@@ -146,7 +153,6 @@ PointCollection<Basis> make_point_collection (Basis basis) {
 
 // "Fallback" converter for PointCollection, which converts each of the
 //  points using the single-point conversion method.
-// FIXME: This works but there's no way to override it! (function templates can't be partially specialized)
 template <class InIter, class OutIter, class FromBasis, class ToBasis>
 void transform_range (InIter pointsBegin, InIter pointsEnd, OutIter out, const FromBasis & fromBasis, const ToBasis & toBasis)
 {
@@ -158,14 +164,10 @@ void transform_range (InIter pointsBegin, InIter pointsEnd, OutIter out, const F
 	);
 }
 
-
-/*
 // The Cartesian => Cartesian trivial conversion:
-// XXX FIXME to my understanding this will overload the template, not specialize it!
 template <class InIter, class OutIter>
 void transform_range (InIter begin, InIter end, OutIter out, const Cartesian &, const Cartesian &)
 {
 	std::copy(begin, end, out);
 }
-*/
 
