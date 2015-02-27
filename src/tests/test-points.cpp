@@ -316,6 +316,8 @@ TEST_CASE("Conversions on point collections") {
 		require_approx_eq(cartesian.transform(TestBasis{}), expected);
 	}
 
+	// TODO: Test an actual, non-fallback conversion
+
 	SECTION("Test fallback to point conversion, when it falls back to Cartesian") { // words
 		auto cartesian = random_point_collection(Cartesian{}, 3);
 		auto testbasis = cartesian.transform(TestBasis{});

@@ -7,21 +7,22 @@
 
 template <class Basis> class PointCollection;
 
+typedef std::vector<RawPoint> RawPointCollection;
+
 // Templates for the free-function version of transform.
 // Implementations of this function are provided through template specializations.
 
-// This has a default implementation, which uses the transformations implemented for Point.
-template <class FromBasis, class ToBasis>
-PointCollection<ToBasis> transform (const PointCollection<FromBasis> & point, ToBasis basis);
+template <class InIter, class OutIter, class FromBasis, class ToBasis>
+void transform_range (InIter pointsBegin, InIter pointsEnd, OutIter out, const FromBasis &, const ToBasis &);
 
 //--------------------------------------
 
 template <class Basis>
 class PointCollection
-: private std::vector<RawPoint>
+: private RawPointCollection
 {
 private:
-	typedef std::vector<RawPoint> container;
+	typedef RawPointCollection container;
 
 public:
 	typedef container::size_type       size_type;
@@ -44,11 +45,19 @@ public:
 	, _basis(basis)
 	{ }
 
+	PointCollection (RawPointCollection src, Basis basis)
+	: container(src)
+	, _basis(basis)
+	{ }
+
 	// member function version of transform
 	template <class NewBasis>
 	PointCollection<NewBasis> transform (NewBasis newBasis) const {
-		// Delegate to the free function form
-		return ::transform(*this, newBasis);
+		// Delegate to transform_range
+		RawPointCollection newRaw(this->size());
+		transform_range(this->begin(), this->end(), newRaw.begin(), basis(), newBasis);
+
+		return PointCollection<NewBasis>(newRaw, newBasis);
 	}
 
 	// TODO: point() and raw() currently return by value because there is no (easy) way to
@@ -67,6 +76,8 @@ public:
 	// For consistency with point(), these return by value.
 	inline value_type raw    (size_type i) const { return operator[](i); };
 	inline value_type raw_at (size_type i) const { return at(i); };
+
+	Basis basis () const { return _basis; }
 
 public:
 	// Provide a reasonable subset of vector's interface
@@ -134,28 +145,36 @@ PointCollection<Basis> make_point_collection (Basis basis) {
 // Definitions of transform()
 
 // "Fallback" converter for PointCollection, which converts each of the
-//  points using the corresponding conversion for Point objects.
-template <class FromBasis, class ToBasis>
-PointCollection<ToBasis> transform (const PointCollection<FromBasis> & collection, ToBasis basis)
+//  points using the single-point conversion method.
+// FIXME: This works but there's no way to override it! (function templates can't be partially specialized)
+template <class InIter, class OutIter, class FromBasis, class ToBasis>
+void transform_range (InIter pointsBegin, InIter pointsEnd, OutIter out, const FromBasis & fromBasis, const ToBasis & toBasis)
 {
-	// FIXME: Could use benchmarking to make this gets optimized well?
-
-	PointCollection<ToBasis> result(collection.size(), basis);
-	
-	// Transform the raw data for each point via a temp Point object
-	for (std::size_t i=0; i<collection.size(); ++i)
-		result[i] = transform(collection.point(i), basis).as_raw();
-
-	return result;
+	// the standard library function for calling a function on a range is, suitably enough, "transform"...
+	// (TODO: we really need our own namespace...)
+	std::transform(
+		pointsBegin, pointsEnd, out,
+		[&] (const RawPoint & p) { return transform(p, fromBasis, toBasis); }
+	);
 }
 
-// TODO Unfortunately, due to the nature of overload matching and resolution (and the fact
-//  that PointCollection must already be declared), this function must return by value,
-//  which means it must produce a copy.  This kinda sucks?
 
+/*
 // The Cartesian => Cartesian trivial conversion:
-template <>
-auto transform (const PointCollection<Cartesian> & collection, Cartesian basis) -> PointCollection<decltype(basis)>
+// XXX FIXME to my understanding this will overload the template, not specialize it!
+template <class InIter, class OutIter>
+void transform_range (InIter begin, InIter end, OutIter out, const Cartesian &, const Cartesian &)
 {
-	return collection; // calls copy constructor
+	std::copy(begin, end, out);
+}
+*/
+
+
+//--------------------------------------
+
+// FIXME: This is only here to satisfy the (poorly concieved) unit tests which tested the original "free function" method.
+template <class FromBasis, class ToBasis>
+PointCollection<ToBasis> transform (const PointCollection<FromBasis> & points, const ToBasis & basis)
+{
+	return points.transform(basis);
 }
