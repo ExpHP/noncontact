@@ -24,35 +24,32 @@ private:
 };
 
 // ScaledCartesian => Cartesian
-template<> auto transform (const Point<ScaledCartesian> & point, Cartesian basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const ScaledCartesian & basis, const Cartesian &)
 {
 	return {
-		point.first()  * point.basis().scale(),
-		point.second() * point.basis().scale(),
-		point.third()  * point.basis().scale(),
-		basis
+		point.first()  * basis.scale(),
+		point.second() * basis.scale(),
+		point.third()  * basis.scale(),
 	};
 }
 
 // Cartesian => ScaledCartesian
-template<> auto transform (const Point<Cartesian> & point, ScaledCartesian basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Cartesian &, const ScaledCartesian & basis)
 {
 	return {
 		point.first()  / basis.scale(),
 		point.second() / basis.scale(),
 		point.third()  / basis.scale(),
-		basis
 	};
 }
 
 // ScaledCartesian => ScaledCartesian
-template<> auto transform (const Point<ScaledCartesian> & point, ScaledCartesian basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const ScaledCartesian & fromBasis, const ScaledCartesian & toBasis)
 {
-	double overallScale = point.basis().scale() / basis.scale();
+	double overallScale = fromBasis.scale() / toBasis.scale();
 	return {
 		point.first()  * overallScale,
 		point.second() * overallScale,
 		point.third()  * overallScale,
-		basis
 	};
 }

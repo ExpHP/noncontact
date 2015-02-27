@@ -4,6 +4,38 @@
 // A basis so important we can't declare anything without it!
 class Cartesian { };
 
+// Data storage format of points.
+// Anything that implements .data() and the std tuple interface. (std::get and friends)
+// FIXME: This class was written using public inheritance to minimize impact on the rest
+//        of the code during the restructure.  This is intended as a TEMPORARY solution.
+class RawPoint
+: public std::array<double, 3>
+{
+public:
+	typedef std::array<double, 3> super;
+
+	// TODO: get rid of constructors that aren't desirable
+	template<typename... Args>
+	RawPoint(Args... args)
+	: super(args...)
+	{ }
+
+	RawPoint(super src)
+	: super(src)
+	{ }
+
+	RawPoint(double a, double b, double c)
+	: super {{ a, b, c }}
+	{ }
+
+	double & first  () { return operator[](0); }
+	double & second () { return operator[](1); }
+	double & third  () { return operator[](2); }
+	double first  () const { return operator[](0); }
+	double second () const { return operator[](1); }
+	double third  () const { return operator[](2); }
+};
+
 //--------------------------------------
 // Forward declarations
 
@@ -14,10 +46,15 @@ template <class Basis> class Point;
 // Unfortunately, this defers the errors for any missing implementations until the
 // linking stage, which are not as helpful as enable_if errors. (FIXME?)
 
+// TODO: what if we just took Basis instead of const FromBasis &?  Bases should generally
+//        be small, and it would make the function defs look a lot cleaner.
+// (actually, since many bases are empty structs, I have to wonder if this would cause even
+//  LESS copying! :P)
+
 // For conversions between two non-Cartesian types.
 // This has a default implementation, which uses Cartesian as an intermediate format.
 template <class FromBasis, class ToBasis>
-Point<ToBasis> transform (const Point<FromBasis> & point, ToBasis basis);
+RawPoint transform (const RawPoint & point, const FromBasis & fromBasis, const ToBasis & toBasis);
 
 // For conversions to and from Cartesian.
 // These are REQUIRED to be specialized for each Basis.
@@ -26,19 +63,15 @@ Point<ToBasis> transform (const Point<FromBasis> & point, ToBasis basis);
 //   prevent Cartesian transformations from matching the above template and causing
 //   an infinite loop in the event that one of the specializations is missing.)
 template <class FromBasis>
-Point<Cartesian> transform (const Point<FromBasis> & point, Cartesian basis);
+RawPoint transform (const RawPoint & point, const FromBasis & basis, const Cartesian &);
 template <class ToBasis>
-Point<ToBasis> transform (const Point<Cartesian> & point, ToBasis basis);
+RawPoint transform (const RawPoint & point, const Cartesian &, const ToBasis & basis);
 
 // For Cartesian to Cartesian.
 // This exists to resolve an ambiguous match (the above two templates tie)
-auto transform (const Point<Cartesian> & point, Cartesian basis) -> Point<decltype(basis)>;
+RawPoint transform (const RawPoint & point, const Cartesian &, const Cartesian &);
 
 //--------------------------------------
-
-// Data storage format of points.
-// Anything that implements .data() and the std tuple interface. (std::get and friends)
-typedef std::array<double, 3> RawPoint;
 
 // TODO: (maybe) implement tuple interface (std::get, etc...)
 // TODO: (maybe) have more meaningfully named member funcs (x(), y(), z() for Cartesian,
@@ -60,9 +93,10 @@ public:
 
 	// member function version of transform
 	template <class NewBasis>
-	Point<NewBasis> transform (NewBasis newBasis) const {
+	Point<NewBasis> transform (const NewBasis & newBasis) const {
 		// Delegate to the free function form
-		return ::transform(*this, newBasis);
+		auto transformed_raw = ::transform(as_raw(), _basis, newBasis);
+		return tag_point(transformed_raw, newBasis);
 	}
 
 	RawPoint & as_raw () { return _coords; }
@@ -71,7 +105,6 @@ public:
 	double * data () { return _coords.data(); }
 	const double * data () const { return _coords.data(); }
 
-	Basis & basis () { return _basis; }
 	Basis basis () const { return _basis; }
 
 	// not sure how I feel about these; specialized names for each basis would be frendlier
@@ -109,13 +142,26 @@ Point<Basis> tag_point (RawPoint raw, Basis basis) {
 //  with no specialized conversion function, it will convert to Cartesian
 //  first, then to the new type.
 template <class FromBasis, class ToBasis>
-Point<ToBasis> transform (const Point<FromBasis> & point, ToBasis basis)
+RawPoint transform (const RawPoint & point, const FromBasis & fromBasis, const ToBasis & toBasis)
 {
-	return transform(transform(point, Cartesian{}), basis);
+	auto cart = transform(point, fromBasis, Cartesian{});
+	return transform(cart, Cartesian{}, toBasis);
 }
 
 // The Cartesian => Cartesian trivial conversion:
-auto transform (const Point<Cartesian> & point, Cartesian basis) -> Point<decltype(basis)>
+RawPoint transform (const RawPoint & point, const Cartesian &, const Cartesian &)
 {
 	return point;
+}
+
+//--------------------------------------
+
+// FIXME: This is here to satisfy the unit tests which tested the original "free function" method.
+//        Those tests never should have existed in the first place, as that free function was essentially
+//         my implementation (and surprise, surprise! the implementation had to change).
+template <class FromBasis, class ToBasis>
+Point<ToBasis> transform (const Point<FromBasis> & point, const ToBasis & basis)
+{
+	auto transformed_raw = transform(point.as_raw(), point.basis(), basis);
+	return tag_point(transformed_raw, basis);
 }

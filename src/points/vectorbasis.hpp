@@ -19,23 +19,22 @@ public:
 };
 
 // VectorBasis => Cartesian
-template<> auto transform (const Point<VectorBasis> & point, Cartesian basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const VectorBasis & basis, const Cartesian &)
 {
 	// matrix vector multiply
-	double (*m)[3] = point.basis().vectors;
+	const double (*m)[3] = basis.vectors;
 	return {
 		m[0][0]*point.first() + m[0][1]*point.second() + m[0][2]*point.third(),
 		m[1][0]*point.first() + m[1][1]*point.second() + m[1][2]*point.third(),
 		m[2][0]*point.first() + m[2][1]*point.second() + m[2][2]*point.third(),
-		basis
 	};
 }
 
 // Cartesian => VectorBasis
-template<> auto transform (const Point<Cartesian> & point, VectorBasis basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Cartesian &, const VectorBasis & basis)
 {
 	// Eigen wrappers for raw pointers
-	Eigen::Map<Eigen::Matrix<double,3,3,Eigen::RowMajor>> matrix (&(basis.vectors[0][0]));
+	Eigen::Map<const Eigen::Matrix<double,3,3,Eigen::RowMajor>> matrix (&(basis.vectors[0][0]));
 	Eigen::Map<const Eigen::Vector3d> product (point.data());
 
 	// get QR decomposition
@@ -46,11 +45,9 @@ template<> auto transform (const Point<Cartesian> & point, VectorBasis basis) ->
 
 	return {
 		solution(0), solution(1), solution(2),
-		basis
 	};
 }
 
 // VectorBasis => VectorBasis
 // Nontrivial; we'll let the fallback implementation handle this.
-//template<> auto transform (const Point<VectorBasis> & point, VectorBasis basis) -> Point<decltype(basis)>
-
+//template<> RawPoint transform (const RawPoint & point, const VectorBasis & fromBasis, const VectorBasis & toBasis);

@@ -10,7 +10,7 @@
 struct Spherical { };
 
 // Spherical => Cartesian
-template<> auto transform (const Point<Spherical> & point, Cartesian basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Spherical &, const Cartesian &)
 {
 	double cos_theta = cos(point.second());
 	double sin_theta = sin(point.second());
@@ -20,12 +20,11 @@ template<> auto transform (const Point<Spherical> & point, Cartesian basis) -> P
 		point.first() * sin_theta * cos_phi,
 		point.first() * sin_theta * sin_phi,
 		point.first() * cos_theta,
-		basis
 	};
 }
 
 // Cartesian => Spherical
-template<> auto transform (const Point<Cartesian> & point, Spherical basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Cartesian &, const Spherical &)
 {
 	double rho_sq = point.first() * point.first() + point.second() * point.second();
 	double r_sq   = rho_sq + point.third() * point.third();
@@ -33,12 +32,11 @@ template<> auto transform (const Point<Cartesian> & point, Spherical basis) -> P
 		sqrt(r_sq),
 		0.5*PI - atan2(point.third(), sqrt(rho_sq)),
 		atan2(point.second(), point.first()),
-		basis
 	};
 }
 
 // Spherical => Spherical
-template<> auto transform (const Point<Spherical> & point, Spherical basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Spherical &, const Spherical &)
 {
 	// Trivial because all Spherical objects are identical.
 	return point;

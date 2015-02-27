@@ -10,7 +10,7 @@
 struct Cylindrical { };
 
 // Cylindrical => Cartesian
-template<> auto transform (const Point<Cylindrical> & point, Cartesian basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Cylindrical &, const Cartesian &)
 {
 	double cos_phi = cos(point.second());
 	double sin_phi = sin(point.second());
@@ -18,23 +18,21 @@ template<> auto transform (const Point<Cylindrical> & point, Cartesian basis) ->
 		point.first() * cos_phi,
 		point.first() * sin_phi,
 		point.third(),
-		basis
 	};
 }
 
 // Cartesian => Cylindrical
-template<> auto transform (const Point<Cartesian> & point, Cylindrical basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Cartesian &, const Cylindrical &)
 {
 	return {
 		sqrt(point.first() * point.first() + point.second() * point.second()),
 		atan2(point.second(), point.first()),
 		point.third(),
-		basis
 	};
 }
 
 // Cylindrical => Cylindrical
-template<> auto transform (const Point<Cylindrical> & point, Cylindrical basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Cylindrical &, const Cylindrical &)
 {
 	// Trivial because all Cylindrical objects are identical.
 	return point;

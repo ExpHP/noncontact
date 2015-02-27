@@ -216,19 +216,19 @@ TEST_CASE("Trivial conversions") {
 class TestBasis { };
 
 // Cartesian -> TestBasis
-template<> auto transform (const Point<Cartesian> & point, TestBasis basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const Cartesian &, const TestBasis &)
 {
-	return { point.second(), point.third(), point.first(), basis };
+	return { point.second(), point.third(), point.first() };
 }
 
 // TestBasis -> Cartesian
-template<> auto transform (const Point<TestBasis> & point, Cartesian basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const TestBasis &, const Cartesian &)
 {
-	return { point.third(), point.first(), point.second(), basis };
+	return { point.third(), point.first(), point.second() };
 }
 
 // TestBasis -> Spherical
-template<> auto transform (const Point<TestBasis> & point, Spherical basis) -> Point<decltype(basis)>
+template<> RawPoint transform (const RawPoint & point, const TestBasis &, const Spherical &)
 {
 	throw float(1234); // something unusual and easily detected
 }
