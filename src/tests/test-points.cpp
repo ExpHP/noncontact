@@ -226,7 +226,7 @@ template<> RawPoint transform (const RawPoint & point, const TestBasis &, const 
 }
 
 // TestBasis -> Spherical
-template<> RawPoint transform (const RawPoint & point, const TestBasis &, const Spherical &)
+template<> RawPoint transform (const RawPoint &, const TestBasis &, const Spherical &)
 {
 	throw float(1234); // something unusual and easily detected
 }
@@ -240,7 +240,7 @@ template<> RawPoint transform (const RawPoint & point, const TestBasis &, const 
 
 // TestBasis -> Cartesian (range)
 template <class InIter, class OutIter>
-void transform_range (InIter begin, InIter end, OutIter out, const TestBasis &, const Cartesian &)
+void transform_range (InIter, InIter, OutIter, const TestBasis &, const Cartesian &)
 {
 	throw int(92); // something unusual and easily detected
 }
@@ -288,9 +288,9 @@ TEST_CASE("Test fallback mechanism") {
 TEST_CASE("Test that Point Collections are not horribly broken") {
 	auto collection = make_point_collection(Cartesian{});
 
-	collection.emplace_back(RawPoint{{20.,30.,40.}});
-	collection.emplace_back(RawPoint{{10.,2.3,4.}});
-	collection.emplace_back(RawPoint{{-2.,0.,1.}});
+	collection.emplace_back(20.,30.,40.);
+	collection.emplace_back(10.,2.3,4.);
+	collection.emplace_back(-2.,0.,1.);
 	REQUIRE( collection.size() == 3 );
 
 	REQUIRE( collection.point(1).second() == Approx(2.3) );
@@ -313,23 +313,23 @@ TEST_CASE("Conversions on point collections") {
 
 	SECTION("Test explicitly implemented collection conversions") {
 		auto testbasis = make_point_collection(TestBasis{});
-		testbasis.emplace_back(RawPoint{{5.,6.,4.}});
-		testbasis.emplace_back(RawPoint{{100.,1000.,10.}});
-		testbasis.emplace_back(RawPoint{{2.,1.,3.}});
+		testbasis.emplace_back(5.,6.,4.);
+		testbasis.emplace_back(100.,1000.,10.);
+		testbasis.emplace_back(2.,1.,3.);
 
 		REQUIRE_THROWS_AS(testbasis.transform(Cartesian{}), int);
 	}
 
 	SECTION("Test fallback to point conversion") {
 		auto cartesian = make_point_collection(Cartesian{});
-		cartesian.emplace_back(RawPoint{{4.,5.,6.}});
-		cartesian.emplace_back(RawPoint{{10.,100.,1000.}});
-		cartesian.emplace_back(RawPoint{{3.,2.,1.}});
+		cartesian.emplace_back(4.,5.,6.);
+		cartesian.emplace_back(10.,100.,1000.);
+		cartesian.emplace_back(3.,2.,1.);
 
 		auto expected = make_point_collection(TestBasis{});
-		expected.emplace_back(RawPoint{{5.,6.,4.}});
-		expected.emplace_back(RawPoint{{100.,1000.,10.}});
-		expected.emplace_back(RawPoint{{2.,1.,3.}});
+		expected.emplace_back(5.,6.,4.);
+		expected.emplace_back(100.,1000.,10.);
+		expected.emplace_back(2.,1.,3.);
 
 		require_approx_eq(cartesian.transform(TestBasis{}), expected);
 	}

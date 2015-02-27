@@ -25,7 +25,7 @@ public:
 	{ }
 
 	RawPoint(double a, double b, double c)
-	: super {{ a, b, c }}
+	: super({{ a, b, c }})
 	{ }
 
 	double & first  () { return operator[](0); }
@@ -82,7 +82,7 @@ class Point
 public:
 
 	Point (double a, double b, double c, Basis basis)
-	: _coords {{a, b, c}}
+	: _coords(a, b, c)
 	, _basis(basis)
 	{ }
 
