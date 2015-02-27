@@ -169,12 +169,3 @@ void transform_range (InIter begin, InIter end, OutIter out, const Cartesian &, 
 }
 */
 
-
-//--------------------------------------
-
-// FIXME: This is only here to satisfy the (poorly concieved) unit tests which tested the original "free function" method.
-template <class FromBasis, class ToBasis>
-PointCollection<ToBasis> transform (const PointCollection<FromBasis> & points, const ToBasis & basis)
-{
-	return points.transform(basis);
-}

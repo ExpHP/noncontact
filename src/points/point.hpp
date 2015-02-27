@@ -154,14 +154,3 @@ RawPoint transform (const RawPoint & point, const Cartesian &, const Cartesian &
 	return point;
 }
 
-//--------------------------------------
-
-// FIXME: This is here to satisfy the unit tests which tested the original "free function" method.
-//        Those tests never should have existed in the first place, as that free function was essentially
-//         my implementation (and surprise, surprise! the implementation had to change).
-template <class FromBasis, class ToBasis>
-Point<ToBasis> transform (const Point<FromBasis> & point, const ToBasis & basis)
-{
-	auto transformed_raw = transform(point.as_raw(), point.basis(), basis);
-	return tag_point(transformed_raw, basis);
-}

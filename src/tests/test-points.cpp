@@ -195,11 +195,9 @@ TEST_CASE("Simple VectorBasis tests") {
 template <class Basis>
 void test_trivial (Basis basis) {
 	auto original = random_point(basis);
-	auto converted1 = original.transform(basis);  // Member function
-	auto converted2 = transform(original, basis); // Free function
+	auto converted = original.transform(basis);
 
-	require_approx_eq(original, converted1);
-	require_approx_eq(original, converted2);
+	require_approx_eq(original, converted);
 }
 
 TEST_CASE("Trivial conversions") {
@@ -254,11 +252,9 @@ TEST_CASE("Test fallback mechanism") {
 		auto fromCartesian = cartesian.transform(Cylindrical{});
 
 		// because TestBasis => Cylindrical is not implemented, this will use the fallback:
-		auto fromTestbasis1 = testbasis.transform(Cylindrical{}); // member function
-		auto fromTestbasis2 = transform(testbasis,Cylindrical{}); // free function
+		auto fromTestbasis = testbasis.transform(Cylindrical{});
 
-		require_approx_eq(fromTestbasis1, fromCartesian);
-		require_approx_eq(fromTestbasis2, fromCartesian);
+		require_approx_eq(fromTestbasis, fromCartesian);
 	}
 
 	SECTION("Test that fallback isn't used when not needed") {
@@ -266,8 +262,7 @@ TEST_CASE("Test fallback mechanism") {
 
 		// TestBasis => Spherical is implemented, and throws a float
 		//  (something which the fallback certainly does not do!)
-		REQUIRE_THROWS_AS(point.transform(Spherical{}),  float); // member function
-		REQUIRE_THROWS_AS(transform(point, Spherical{}), float); // free function
+		REQUIRE_THROWS_AS(point.transform(Spherical{}),  float);
 	}
 
 }
@@ -323,11 +318,9 @@ TEST_CASE("Conversions on point collections") {
 		auto testbasis = cartesian.transform(TestBasis{});
 
 		auto fromCartesian = cartesian.transform(Cylindrical{});
-		auto fromTestbasis1 = testbasis.transform(Cylindrical{}); // member function
-		auto fromTestbasis2 = transform(testbasis,Cylindrical{}); // free function
+		auto fromTestbasis = testbasis.transform(Cylindrical{});
 
-		require_approx_eq(fromTestbasis1, fromCartesian);
-		require_approx_eq(fromTestbasis2, fromCartesian);
+		require_approx_eq(fromTestbasis, fromCartesian);
 	}
 
 	SECTION("Test fallback to point conversion, when Cartesian fallback isn't needed") { // arghfffbl
@@ -336,8 +329,7 @@ TEST_CASE("Conversions on point collections") {
 		auto points = PointCollection<TestBasis>(TestBasis{}); // lazy
 		points.emplace_back(point.as_raw());
 
-		REQUIRE_THROWS_AS(points.transform(Spherical{}),  float); // member function
-		REQUIRE_THROWS_AS(transform(points, Spherical{}), float); // free function
+		REQUIRE_THROWS_AS(points.transform(Spherical{}), float);
 	}
 
 }
