@@ -356,3 +356,41 @@ TEST_CASE("Conversions on point collections") {
 	}
 
 }
+
+// performs various things with a dynamic basis and another basis to see if they compile
+template <class Basis>
+void dynamic_basis_compile_test(AnyBasis any, Basis other) {
+	RawPoint p {0.2, 0.4, 0.6};
+	RawPointCollection v;
+	RawPointCollection out(1);
+	v.push_back(p);
+
+	transform(p, any, other);
+	transform(p, other, any);
+	transform_range(v.begin(), v.end(), out.begin(), any, other);
+	transform_range(v.begin(), v.end(), out.begin(), other, any);
+}
+
+TEST_CASE("Dynamic Basis") {
+	SECTION("Compilation test: Create from various types") {
+		// Cause instantiation of some of AnyBasis's templated inner classes
+		AnyBasis anyCart(Cartesian{});
+		AnyBasis anySpher(Spherical{});
+		AnyBasis anyCylind(Cylindrical{});
+		AnyBasis anyScaled(ScaledCartesian{0.5});
+
+		SECTION("Compilation test: Try some transformations") {
+			// Between a dynamic basis and Cartesian
+			dynamic_basis_compile_test(anySpher, Cartesian{});
+
+			// Between a dynamic basis that is cartesian and Cartesian
+			dynamic_basis_compile_test(anyCart, Cartesian{});
+
+			// Between a dynamic basis and something not Cartesian
+			dynamic_basis_compile_test(anyScaled, Spherical{});
+
+			// Between two dynamic bases
+			dynamic_basis_compile_test(anySpher, anyCylind);
+		}
+	}
+}

@@ -4,3 +4,4 @@
 #include "cylindrical.hpp"
 #include "vectorbasis.hpp"
 #include "scaled.hpp"
+#include "dynamic-basis.hpp"
