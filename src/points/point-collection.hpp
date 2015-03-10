@@ -84,6 +84,10 @@ public:
 	inline value_type raw    (size_type i) const { return operator[](i); };
 	inline value_type raw_at (size_type i) const { return at(i); };
 
+	// Access to the underlying RawPointCollection
+	RawPointCollection & as_raw () { return static_cast<RawPointCollection&>(*this); }
+	const RawPointCollection & as_raw () const { return static_cast<RawPointCollection&>(*this); }
+
 	Basis basis () const { return _basis; }
 
 public:

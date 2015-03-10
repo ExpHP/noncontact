@@ -371,6 +371,38 @@ void dynamic_basis_compile_test(AnyBasis any, Basis other) {
 	transform_range(v.begin(), v.end(), out.begin(), other, any);
 }
 
+//  converts a point from one basis to another statically and dynamically to see if they match
+template <class FromBasis, class ToBasis>
+void dynamic_basis_consistency_test(FromBasis from, ToBasis to) {
+	auto ptRaw     = random_point(from).as_raw();
+	Point<FromBasis> ptStatic  = tag_point(ptRaw, from);
+	Point<AnyBasis>  ptDynamic = tag_point(ptRaw, AnyBasis(from));
+
+	PointCollection<FromBasis> listStatic  = random_point_collection(from, 3);
+	PointCollection<AnyBasis>  listDynamic {listStatic.as_raw(), AnyBasis(from)};
+
+	ToBasis  toStatic  = to;
+	AnyBasis toDynamic = AnyBasis(to);
+
+	// static type to static type
+	auto ptExpected   = ptStatic.transform(toStatic);
+	auto listExpected = listStatic.transform(toStatic);
+
+	// The expectation is that AnyBasis calls the exact same implementation as would
+	//  have been called statically.
+	// Thus, these tests use == comparison.
+	REQUIRE( ptStatic.transform(toDynamic).as_raw()  == ptExpected.as_raw() );
+	REQUIRE( ptDynamic.transform(toStatic).as_raw()  == ptExpected.as_raw() );
+	REQUIRE( ptDynamic.transform(toDynamic).as_raw() == ptExpected.as_raw() );
+	REQUIRE( listStatic.transform(toDynamic).as_raw()  == listExpected.as_raw() );
+	REQUIRE( listDynamic.transform(toStatic).as_raw()  == listExpected.as_raw() );
+	REQUIRE( listDynamic.transform(toDynamic).as_raw() == listExpected.as_raw() );
+
+	// Erm... let's make sure that list comparison is actually checking the elements
+	listExpected[2].first() = 0;
+	REQUIRE( listDynamic.transform(toStatic).as_raw() != listExpected.as_raw() );
+}
+
 TEST_CASE("Dynamic Basis") {
 	SECTION("Compilation test: Create from various types") {
 		// Cause instantiation of some of AnyBasis's templated inner classes
@@ -392,5 +424,12 @@ TEST_CASE("Dynamic Basis") {
 			// Between two dynamic bases
 			dynamic_basis_compile_test(anySpher, anyCylind);
 		}
+	}
+
+	SECTION("Dynamic basis conversions are consistent with static conversions") {
+		dynamic_basis_consistency_test(Cylindrical{}, Cartesian{});   // to cart
+		dynamic_basis_consistency_test(Cartesian{},   Cylindrical{}); // from cart
+		dynamic_basis_consistency_test(Cartesian{},   Cartesian{});   // cart to cart
+		dynamic_basis_consistency_test(Spherical{},   Cylindrical{}); // non-cart to non-cart
 	}
 }

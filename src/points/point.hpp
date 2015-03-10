@@ -71,6 +71,29 @@ RawPoint transform (const RawPoint & point, const Cartesian &, const ToBasis & b
 // This exists to resolve an ambiguous match (the above two templates tie)
 RawPoint transform (const RawPoint & point, const Cartesian &, const Cartesian &);
 
+// XXX Forward declare this stuff as well
+// Gee this stuff needs to be collected in a better place.
+
+struct AnyBasis;
+
+template <class FromBasis>
+RawPoint transform (const RawPoint & point, const FromBasis &, const AnyBasis &);
+template <class ToBasis>
+RawPoint transform (const RawPoint & point, const AnyBasis &, const ToBasis &);
+RawPoint transform (const RawPoint & point, const AnyBasis &, const AnyBasis &);
+
+template <class InIter, class OutIter, class FromBasis>
+void transform_range (InIter begin, InIter end, OutIter, const FromBasis &, const AnyBasis &);
+template <class InIter, class OutIter, class ToBasis>
+void transform_range (InIter begin, InIter end, OutIter, const AnyBasis &, const ToBasis &);
+template <class InIter, class OutIter>
+void transform_range (InIter begin, InIter end, OutIter, const AnyBasis &, const AnyBasis &);
+
+RawPoint transform (const RawPoint & point, const Cartesian &, const AnyBasis &);
+RawPoint transform (const RawPoint & point, const AnyBasis &, const Cartesian &);
+
+// various tiebreakers
+
 //--------------------------------------
 
 // TODO: (maybe) implement tuple interface (std::get, etc...)
